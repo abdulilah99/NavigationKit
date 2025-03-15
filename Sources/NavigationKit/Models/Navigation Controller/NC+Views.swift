@@ -8,6 +8,7 @@
 import SwiftUI
 
 public extension NavigationController {
+    @MainActor
     private var sheetsBinding: Binding<[Card]> {
         Binding(get: {
             self.sheets
@@ -17,6 +18,7 @@ public extension NavigationController {
     }
     
     @ViewBuilder
+    @MainActor
     private var iOS17Compatible: some View {
         if useCustomNavigationView {
             CustomNavigationView(tabs: tabs)
@@ -26,11 +28,13 @@ public extension NavigationController {
     }
     
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
+    @MainActor
     private var iOS18Compatible: some View {
         TabNavigationView(tabs: tabs)
     }
     
     @ViewBuilder
+    @MainActor
     private var view: some View {
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, *) {
             iOS18Compatible
@@ -39,7 +43,8 @@ public extension NavigationController {
         }
     }
     
-    func makeView() -> some View {
+    @MainActor
+    func makeView() async -> some View {
         view
             .sheets(items: sheetsBinding)
             .environment(\.navigationSelection, selectedTab)
