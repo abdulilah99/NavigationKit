@@ -47,7 +47,7 @@ public extension NavigationController {
         }
     }
     
-    func makeView() async -> some View {
+    func makeView() -> some View {
         view
             .sheets(items: sheetsBinding)
             .environment(\.navigationSelection, selectedTab)
