@@ -9,6 +9,7 @@ import SwiftUI
 import Observation
 
 @Observable
+@MainActor
 public class NavigationTab<Page: Navigable>: Identifiable {
     let page: Page
     var path: [Page]
@@ -18,7 +19,6 @@ public class NavigationTab<Page: Navigable>: Identifiable {
         self.path = path
     }
     
-    @MainActor
     var pathBinding: Binding<[Page]> {
         .init(get: { self.path }) { newValue in
             self.path = newValue
@@ -26,7 +26,6 @@ public class NavigationTab<Page: Navigable>: Identifiable {
     }
     
     @ViewBuilder
-    @MainActor
     public var content: some View {
         NavigationStack(path: pathBinding) {
             page.destination

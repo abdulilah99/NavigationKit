@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 public protocol NavigationController: AnyObject, Observable {
     associatedtype Tab: Navigable
     //associatedtype Page: Navigable

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NavigationView<Controller: NavigationController>: View {
+public struct NavigationView<Controller: NavigationController>: View {
     @Binding var controller: Controller
     
     public init(controller: Binding<Controller>) {
