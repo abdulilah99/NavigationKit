@@ -11,8 +11,8 @@ import Observation
 @Observable
 @MainActor
 public class NavigationTab<Page: Navigable>: Identifiable {
-    let page: Page
-    var path: [Page]
+    public let page: Page
+    public var path: [Page]
     
     public init(page: Page, path: [Page] = []) {
         self.page = page

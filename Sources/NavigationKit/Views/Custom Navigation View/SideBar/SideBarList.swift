@@ -32,7 +32,9 @@ struct SideBarList<Page: Navigable>: View {
                 }
             }
             .listStyle(.plain)
+            #if os(iOS) || os(macOS)
             .background(Color(.secondarySystemGroupedBackground))
+            #endif
             .navigationTitle(sideBarTitle)
             .toolbar { SideBarToggleButton(isInSideBar: true) }
         }

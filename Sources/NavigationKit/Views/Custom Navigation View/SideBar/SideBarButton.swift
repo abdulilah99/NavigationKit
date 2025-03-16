@@ -33,7 +33,9 @@ struct SideBarButton<Page: Navigable>: View {
         }) {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 10)
+                    #if os(iOS) || os(macOS)
                     .fill(Color(.systemGroupedBackground))
+                    #endif
                     .opacity(isActive ? 1 : 0.0001)
                 
                 Label(page.titleKey, systemImage: page.systemImage)
@@ -45,7 +47,9 @@ struct SideBarButton<Page: Navigable>: View {
         .buttonStyle(.plain)
         .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
         .listRowBackground(Color.clear)
+        #if os(iOS) || os(macOS)
         .listRowSeparator(.hidden)
+        #endif
     }
 }
 

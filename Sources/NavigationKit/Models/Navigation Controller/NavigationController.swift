@@ -10,7 +10,6 @@ import SwiftUI
 @MainActor
 public protocol NavigationController: AnyObject, Observable {
     associatedtype Tab: Navigable
-    //associatedtype Page: Navigable
     associatedtype Card: Sheet
     
     var selectedTab: Tab { get set }
@@ -23,4 +22,6 @@ public protocol NavigationController: AnyObject, Observable {
     func present(sheet: Card)
     
     var useCustomNavigationView: Bool { get }
+    
+    subscript(tab: Tab) -> [Tab] { get set }
 }

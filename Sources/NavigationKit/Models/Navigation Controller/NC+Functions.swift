@@ -37,4 +37,9 @@ public extension NavigationController {
             sheets.append(sheet)
         }
     }
+    
+    subscript(tab: Tab) -> [Tab] {
+        get { tabs.first(where: { $0.page == tab })?.path ?? [] }
+        set { tabs.first(where: { $0.page == tab })?.path = newValue }
+    }
 }

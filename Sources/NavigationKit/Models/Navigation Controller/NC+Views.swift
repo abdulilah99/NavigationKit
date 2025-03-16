@@ -8,6 +8,10 @@
 import SwiftUI
 
 public extension NavigationController {
+    var sheets: [Card] {
+        []
+    }
+    
     var useCustomNavigationView: Bool {
         false
     }

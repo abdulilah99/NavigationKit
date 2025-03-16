@@ -34,11 +34,11 @@ struct SideBarToggleButton: ToolbarContent {
     }
     
     var toolbarPlacement: ToolbarItemPlacement {
-#if os(macOS)
+        #if os(macOS)
         .automatic
-#else
+        #else
         .topBarLeading
-#endif
+        #endif
     }
     
     func content() -> some View {

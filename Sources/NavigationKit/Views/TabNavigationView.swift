@@ -31,16 +31,24 @@ struct TabNavigationView<Page: Navigable>: View {
     public var body: some View {
         TabView(selection: selection) {
             ForEach(tabs) { tab in
+                #if os(iOS) || os(macOS)
                 Tab(tab.page.titleKey, systemImage: tab.page.systemImage, value: tab.page, role: tab.page.role) {
                     tab.content
                 }
                 .tabPlacement(.automatic)
                 .defaultVisibility(tab.page.placement.sideBarVisibility, for: .sidebar)
                 .defaultVisibility(tab.page.placement.tabBarVisibility, for: .tabBar)
+                #else
+                if tab.page.placement.isInTabBar {
+                    Tab(tab.page.titleKey, systemImage: tab.page.systemImage, value: tab.page, role: tab.page.role) {
+                        tab.content
+                    }
+                    .tabPlacement(.automatic)
+                }
+                #endif
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        .defaultAdaptableTabBarPlacement(.sidebar)
         .environment(\.serotoninNamespace, namespace)
     }
 }
