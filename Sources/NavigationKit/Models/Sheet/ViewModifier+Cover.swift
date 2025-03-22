@@ -14,13 +14,9 @@ private struct Cover<Destination: View>: ViewModifier {
     var destination: () -> Destination
     
     func body(content: Content) -> some View {
-        if isFullscreen {
-            content
-                .fullScreenCover(isPresented: $isPresented, onDismiss: onDismiss, content: destination)
-        } else {
-            content
-                .sheet(isPresented: $isPresented, onDismiss: onDismiss, content: destination)
-        }
+        content
+            .presentationCompactAdaptation(isFullscreen ? .fullScreenCover : .automatic)
+            .sheet(isPresented: $isPresented, onDismiss: onDismiss, content: destination)
     }
 }
 

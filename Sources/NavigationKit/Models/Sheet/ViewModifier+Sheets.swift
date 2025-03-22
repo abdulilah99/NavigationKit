@@ -91,9 +91,10 @@ private struct LegacySheetsPresenter<S: Sheet>: ViewModifier {
     func body(content: Content) -> some View {
         if item.wrappedValue?.isFullScreen ?? false {
             content
-                .fullScreenCover(item: item, onDismiss: item.wrappedValue?.onDismiss) { item in
+                .sheet(item: item, onDismiss: item.wrappedValue?.onDismiss) { item in
                     item.destination
                         .modifier(item.modifier)
+                        .presentationCompactAdaptation(.fullScreenCover)
                 }
         } else {
             content
