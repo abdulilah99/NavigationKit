@@ -39,9 +39,11 @@ fileprivate struct ControllerView<Page: Navigable>: View {
         @Bindable var tab = tab
         NavigationStack(path: $tab.path) {
             tab.page.destination
+                .modifier(tab.page.modifier)
                 .toolbar { SideBarToggleButton(isInSideBar: false) }
                 .navigationDestination(for: Page.self) { navigable in
                     navigable.destination
+                        .modifier(navigable.modifier)
                         .environment(tab)
                 }
         }

@@ -29,8 +29,10 @@ public class NavigationTab<Page: Navigable>: Identifiable {
     public var content: some View {
         NavigationStack(path: pathBinding) {
             page.destination
+                .modifier(page.modifier)
                 .navigationDestination(for: Page.self) { navigable in
                     navigable.destination
+                        .modifier(navigable.modifier)
                 }
         }
         .environment(\.navigationPath, path)

@@ -45,9 +45,11 @@ private struct SheetsPresenter<S: Sheet>: ViewModifier {
         if let item {
             if currentIndex < items.count {
                 item.destination
+                    .modifier(item.modifier)
                     .sheetsPresenter(items: $items, currentIndex: currentIndex + 1)
             } else {
                 item.destination
+                    .modifier(item.modifier)
             }
         }
     }
@@ -91,11 +93,13 @@ private struct LegacySheetsPresenter<S: Sheet>: ViewModifier {
             content
                 .fullScreenCover(item: item, onDismiss: item.wrappedValue?.onDismiss) { item in
                     item.destination
+                        .modifier(item.modifier)
                 }
         } else {
             content
                 .sheet(item: item, onDismiss: item.wrappedValue?.onDismiss) { item in
                     item.destination
+                        .modifier(item.modifier)
                 }
         }
     }

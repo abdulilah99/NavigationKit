@@ -9,11 +9,13 @@ import SwiftUI
 
 public protocol Navigable: Identifiable, Hashable, Equatable {
     associatedtype Destination: View
+    associatedtype Modifier: ViewModifier
     
     var id: Self.ID { get }
     var titleKey: LocalizedStringKey { get }
     var systemImage: String { get }
     @ViewBuilder var destination: Destination { get }
+    var modifier: Modifier { get }
     
     var placement: BarPlacement { get }
     
@@ -22,6 +24,8 @@ public protocol Navigable: Identifiable, Hashable, Equatable {
 }
 
 public extension Navigable {
+    var modifier: some ViewModifier { EmptyModifier() }
+    
     var placement: BarPlacement { .all }
     
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
