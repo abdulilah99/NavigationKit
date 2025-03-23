@@ -31,17 +31,16 @@ struct TabNavigationView<Page: Navigable>: View {
     public var body: some View {
         TabView(selection: selection) {
             ForEach(tabs) { tab in
-                if tab.page.placement != .none {
-                    Tab(tab.page.titleKey, systemImage: tab.page.systemImage, value: tab.page, role: tab.page.role) {
-                        tab.content
-                    }
-                    .tabPlacement(!tab.page.placement.isInTabBar ? .sidebarOnly : .automatic)
-                    #if os(iOS)
-                    .defaultVisibility(tab.page.placement.sideBarVisibility, for: .sidebar)
-                    .defaultVisibility(tab.page.placement.tabBarVisibility, for: .tabBar)
-                    #endif
+                Tab(tab.page.titleKey, systemImage: tab.page.systemImage, value: tab.page, role: tab.page.role) {
+                    tab.content
                 }
-                
+                .tabPlacement(!tab.page.placement.isInTabBar ? .sidebarOnly : .automatic)
+                #if os(iOS) || os(macOS)
+                .defaultVisibility(tab.page.placement.tabBarVisibility, for: .tabBar)
+                #endif
+                #if os(iOS)
+                .defaultVisibility(tab.page.placement.sideBarVisibility, for: .sidebar)
+                #endif
             }
         }
         .tabViewStyle(.sidebarAdaptable)

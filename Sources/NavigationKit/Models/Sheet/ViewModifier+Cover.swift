@@ -15,8 +15,10 @@ private struct Cover<Destination: View>: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .presentationCompactAdaptation(isFullscreen ? .fullScreenCover : .automatic)
-            .sheet(isPresented: $isPresented, onDismiss: onDismiss, content: destination)
+            .sheet(isPresented: $isPresented, onDismiss: onDismiss) {
+                destination()
+                    .presentationCompactAdaptation(isFullscreen ? .fullScreenCover : .automatic)
+            }
     }
 }
 
