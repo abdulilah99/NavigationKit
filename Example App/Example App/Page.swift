@@ -21,11 +21,15 @@ enum Page: Navigable {
         }
     }
     
-    var systemImage: String {
+    var image: Image {
+        var name: String = ""
+        
         switch self {
-        case .home: "house"
-        case .settings: "gear"
+        case .home: name = "house"
+        case .settings: name = "gear"
         }
+        
+        return Image(systemName: name)
     }
     
     var destination: some View {

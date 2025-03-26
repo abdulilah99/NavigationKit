@@ -37,7 +37,7 @@ struct SideBarButton<Page: Navigable>: View {
                     .fill(Color(red: 242, green: 242, blue: 247))
                     .opacity(isActive ? 1 : 0.0001)
                 
-                Label(page.titleKey, systemImage: page.systemImage)
+                Label(title: { Text(page.titleKey) }) { page.image }
                     //.symbolEffect(.bounce, options: .nonRepeating, value: isAnimating)
                     .padding(.horizontal)
             }

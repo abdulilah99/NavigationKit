@@ -13,7 +13,7 @@ public protocol Navigable: Identifiable, Hashable, Equatable {
     
     var id: Self.ID { get }
     var titleKey: LocalizedStringKey { get }
-    var systemImage: String { get }
+    var image: Image { get }
     @ViewBuilder var destination: Destination { get }
     var modifier: Modifier { get }
     

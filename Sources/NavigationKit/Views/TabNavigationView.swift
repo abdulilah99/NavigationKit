@@ -31,8 +31,8 @@ struct TabNavigationView<Page: Navigable>: View {
     public var body: some View {
         TabView(selection: selection) {
             ForEach(tabs) { tab in
-                Tab(tab.page.titleKey, systemImage: tab.page.systemImage, value: tab.page, role: tab.page.role) {
-                    tab.content
+                Tab(value: tab.page, role: tab.page.role, content: { tab.content }) {
+                    Label(title: { Text(tab.page.titleKey) }) { tab.page.image }
                 }
                 .tabPlacement(!tab.page.placement.isInTabBar ? .sidebarOnly : .automatic)
                 #if os(iOS) || os(macOS)

@@ -33,7 +33,7 @@ struct OldTabNavigationView<Page: Navigable>: View {
                 tab.content
                     .tag(tab.page)
                     .tabItem {
-                        Label(tab.page.titleKey, systemImage: tab.page.systemImage)
+                        Label(title: { Text(tab.page.titleKey) }) { tab.page.image }
                     }
             }
         }

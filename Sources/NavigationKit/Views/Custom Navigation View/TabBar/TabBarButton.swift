@@ -30,7 +30,7 @@ struct TabBarButton<Page: Navigable>: View {
             }
         }) {
             VStack(spacing: 2) {
-                Image(systemName: page.systemImage)
+                page.image
                     //.symbolEffect(.bounce.byLayer, options: .nonRepeating, value: isAnimating)
                     .symbolVariant(.fill)
                     .font(.system(size: 24))

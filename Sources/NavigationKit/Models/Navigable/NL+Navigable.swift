@@ -10,7 +10,7 @@ import SwiftUI
 public extension NavigationLink where Destination == Never, Label == SwiftUI.Label<Text, Image> {
      init(value: any Navigable) {
          self.init(value: value) {
-             Label(value.titleKey, systemImage: value.systemImage)
+             Label(title: { Text(value.titleKey) }) { value.image }
          }
      }
  }

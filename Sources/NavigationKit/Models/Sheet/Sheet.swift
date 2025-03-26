@@ -14,7 +14,7 @@ public protocol Sheet: Navigable {
 
 public extension Sheet {
     var titleKey: LocalizedStringKey { "Sheet" }
-    var systemImage: String { "" }
+    var image: Image { Image(systemName: "") }
     var placement: BarPlacement { .none }
     var isFullScreen: Bool { false }
     func onDismiss() { }
