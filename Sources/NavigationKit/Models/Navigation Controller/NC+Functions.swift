@@ -29,15 +29,6 @@ public extension NavigationController {
         selectedTab = targetTab
     }
     
-    func present(sheet: Card) {
-        if let index = sheets.firstIndex(of: sheet) {
-            let removalIndex = index + 1
-            sheets.removeSubrange(removalIndex..<sheets.count)
-        } else {
-            sheets.append(sheet)
-        }
-    }
-    
     subscript(tab: Tab) -> [Tab] {
         get { tabs.first(where: { $0.page == tab })?.path ?? [] }
         set { tabs.first(where: { $0.page == tab })?.path = newValue }

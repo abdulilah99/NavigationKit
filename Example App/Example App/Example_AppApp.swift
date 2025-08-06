@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct Example_AppApp: App {
-    @State var navigationController = NavigationController()
+    @State var router = Router()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(navigationController)
+                .environment(router)
         }
     }
 }

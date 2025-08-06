@@ -7,16 +7,19 @@
 
 import SwiftUI
 import NavigationKit
+import ModalKit
 
 struct ContentView: View {
-    @Environment(NavigationController.self) var navigationController
+    @Environment(Router.self) var router
     
     var body: some View {
-        navigationController.makeView()
+        @Bindable var router = router
+        router.makeView()
+            .sheets(items: $router.sheets)
     }
 }
 
 #Preview {
     ContentView()
-        .environment(NavigationController())
+        .environment(Router())
 }

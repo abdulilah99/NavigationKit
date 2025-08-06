@@ -5,12 +5,13 @@
 //  Created by Abdulilah on 23/03/2025.
 //
 
-import NavigationKit
 import SwiftUI
 import Observation
+import NavigationKit
+import ModalKit
 
 @Observable
-class NavigationController: NavigationKit.NavigationController {
+class Router: NavigationController, ModalController {
     var selectedTab: Page = .home
     var tabs: [NavigationTab] = [.init(page: Page.home), .init(page: .settings)]
     var sheets: [Sheet] = []

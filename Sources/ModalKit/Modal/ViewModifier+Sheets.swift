@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-private struct SheetsPresenter<S: Sheet>: ViewModifier {
-    @Binding var items: [S]
+private struct SheetsPresenter<M: Modal>: ViewModifier {
+    @Binding var items: [M]
     var currentIndex: Int = 0
     var isFullScreen: Bool
     
-    @State var currentItem: S? = nil
+    @State var currentItem: M? = nil
     
     var currentItemBinding: Binding<Bool> {
         .init(get: { currentItem != nil }) { newValue in
@@ -41,7 +41,7 @@ private struct SheetsPresenter<S: Sheet>: ViewModifier {
     }
     
     @ViewBuilder
-    func nextSheet(for item: S?) -> some View {
+    func nextSheet(for item: M?) -> some View {
         if let item {
             if currentIndex < items.count {
                 item.destination
@@ -66,19 +66,19 @@ private struct SheetsPresenter<S: Sheet>: ViewModifier {
 }
 
 extension View {
-    func sheetsPresenter<S: Sheet>(items: Binding<[S]>, currentIndex: Int) -> some View {
+    func sheetsPresenter<M: Modal>(items: Binding<[M]>, currentIndex: Int) -> some View {
         modifier(SheetsPresenter(items: items, currentIndex: currentIndex, isFullScreen: currentIndex < items.count ? items.wrappedValue[currentIndex].isFullScreen : false))
     }
     
-    public func sheets<S: Sheet>(items: Binding<[S]>) -> some View {
+    public func sheets<M: Modal>(items: Binding<[M]>) -> some View {
         sheetsPresenter(items: items, currentIndex: 0)
     }
 }
 
-private struct LegacySheetsPresenter<S: Sheet>: ViewModifier {
-    @Binding var items: [S]
+private struct LegacySheetsPresenter<M: Modal>: ViewModifier {
+    @Binding var items: [M]
     
-    var item: Binding<S?> {
+    var item: Binding<M?> {
         Binding(get: {
             return items.last
         }) { newValue in
@@ -107,7 +107,7 @@ private struct LegacySheetsPresenter<S: Sheet>: ViewModifier {
 }
 
 private extension View {
-    func legacySheets<S: Sheet>(items: Binding<[S]>) -> some View {
+    func legacySheets<M: Modal>(items: Binding<[M]>) -> some View {
         modifier(LegacySheetsPresenter(items: items))
     }
 }

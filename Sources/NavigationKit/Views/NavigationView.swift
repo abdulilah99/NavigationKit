@@ -16,7 +16,6 @@ public struct NavigationView<Controller: NavigationController>: View {
     
     public var body: some View {
         view
-            .sheets(items: $controller.sheets)
             .environment(\.navigationSelection, controller.selectedTab)
             .environment(\.setNavigationSelection, SetNavigationSelectionAction(action: { selection in
                 controller.selectedTab = selection as! Controller.Tab

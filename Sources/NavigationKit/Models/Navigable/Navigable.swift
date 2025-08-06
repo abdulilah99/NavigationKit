@@ -32,6 +32,10 @@ public extension Navigable {
     var role: TabRole? { nil }
 }
 
+public extension Navigable where Modifier == EmptyModifier {
+    var modifier: EmptyModifier { EmptyModifier() }
+}
+
 public enum BarPlacement: Hashable, Codable {
     case all, side, tab, none
     

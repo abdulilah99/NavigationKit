@@ -17,6 +17,7 @@
 		43127EFD2D8F661C0041111D /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43127EFC2D8F661C0041111D /* NavigationKit */; };
 		43127EFF2D8F669B0041111D /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127EFE2D8F669B0041111D /* Page.swift */; };
 		43127F012D8F6F6F0041111D /* Sheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127F002D8F6F6F0041111D /* Sheet.swift */; };
+		437A3CF02E43172100D2C537 /* ModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 437A3CEF2E43172100D2C537 /* ModalKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				43127EF72D8F658D0041111D /* NavigationKit in Frameworks */,
+				437A3CF02E43172100D2C537 /* ModalKit in Frameworks */,
 				43127EFA2D8F65F60041111D /* NavigationKit in Frameworks */,
 				43127EFD2D8F661C0041111D /* NavigationKit in Frameworks */,
 			);
@@ -49,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				43127EEE2D8F650B0041111D /* Example App */,
+				437A3CEE2E43172100D2C537 /* Frameworks */,
 				43127ED72D8F64FA0041111D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -84,6 +87,13 @@
 			path = "Example App";
 			sourceTree = "<group>";
 		};
+		437A3CEE2E43172100D2C537 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -104,6 +114,7 @@
 				43127EF62D8F658D0041111D /* NavigationKit */,
 				43127EF92D8F65F60041111D /* NavigationKit */,
 				43127EFC2D8F661C0041111D /* NavigationKit */,
+				437A3CEF2E43172100D2C537 /* ModalKit */,
 			);
 			productName = "Example App";
 			productReference = 43127ED62D8F64FA0041111D /* Example App.app */;
@@ -408,6 +419,11 @@
 		43127EFC2D8F661C0041111D /* NavigationKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = NavigationKit;
+		};
+		437A3CEF2E43172100D2C537 /* ModalKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 43127EFB2D8F661C0041111D /* XCLocalSwiftPackageReference "../../NavigationKit" */;
+			productName = ModalKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -8,20 +8,8 @@
 import SwiftUI
 
 public extension NavigationController {
-    var sheets: [Card] {
-        []
-    }
-    
     var useCustomNavigationView: Bool {
         false
-    }
-    
-    private var sheetsBinding: Binding<[Card]> {
-        Binding(get: {
-            self.sheets
-        }) { newValue in
-            self.sheets = newValue
-        }
     }
     
     @ViewBuilder
@@ -49,7 +37,6 @@ public extension NavigationController {
     
     func makeView() -> some View {
         view
-            .sheets(items: sheetsBinding)
             .environment(\.navigationSelection, selectedTab)
             .environment(\.setNavigationSelection, SetNavigationSelectionAction(action: { selection in
                 self.selectedTab = selection as! Tab

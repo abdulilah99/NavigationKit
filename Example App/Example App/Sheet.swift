@@ -6,9 +6,9 @@
 //
 
 import SwiftUI
-import NavigationKit
+import ModalKit
 
-enum Sheet: NavigationKit.Sheet {
+enum Sheet: Modal {
     case login
     
     var id: Self { self }
