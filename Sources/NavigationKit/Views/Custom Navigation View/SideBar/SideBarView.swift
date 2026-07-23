@@ -18,9 +18,7 @@ struct SideBarView<Content: View, Page: Navigable>: View {
         self.content = content()
     }
     
-    @State var isSideBarPresented: Bool = true
-    
-    @Namespace var sideBarNamespace
+    @State private var isSideBarPresented: Bool = true
     
     var body: some View {
         HStack(spacing: 0) {

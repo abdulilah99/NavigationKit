@@ -26,7 +26,8 @@ struct SideBarList<Page: Navigable>: View {
                         SideBarButton(page: tab.page)
                             .environment(\.navigationPath, tab.path)
                             .environment(\.setNavigationPath, SetNavigationPathAction(action: { path in
-                                tab.path = path as! [Page]
+                                guard let path = path as? [Page] else { return }
+                                tab.path = path
                             }))
                     }
                 }

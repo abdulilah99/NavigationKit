@@ -37,7 +37,8 @@ public class NavigationTab<Page: Navigable>: Identifiable {
         }
         .environment(\.navigationPath, path)
         .environment(\.setNavigationPath, SetNavigationPathAction(action: { path in
-            self.path = path as! [Page]
+            guard let path = path as? [Page] else { return }
+            self.path = path
         }))
     }
 }

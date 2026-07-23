@@ -11,7 +11,7 @@ struct OldTabNavigationView<Page: Navigable>: View {
     @Environment(\.navigationSelection) var navigationSelection
     @Environment(\.setNavigationSelection) var setNavigationSelection
     
-    @Namespace var namespace
+    @Namespace private var namespace
     
     var tabs: [NavigationTab<Page>]
     

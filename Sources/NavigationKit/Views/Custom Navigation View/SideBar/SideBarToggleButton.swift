@@ -12,7 +12,7 @@ struct SideBarToggleButton: ToolbarContent {
     @Environment(\.isSideBarPresented) private var isSideBarPresented
     @Environment(\.toggleSideBar) private var toggleSideBar
     
-    @Namespace var defaultNamespace
+    @Namespace private var defaultNamespace
     
     let isInSideBar: Bool
     

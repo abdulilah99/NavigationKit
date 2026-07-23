@@ -39,7 +39,8 @@ public extension NavigationController {
         view
             .environment(\.navigationSelection, selectedTab)
             .environment(\.setNavigationSelection, SetNavigationSelectionAction(action: { selection in
-                self.selectedTab = selection as! Tab
+                guard let selection = selection as? Tab else { return }
+                self.selectedTab = selection
             }))
     }
 }

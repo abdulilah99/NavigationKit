@@ -8,23 +8,18 @@
 import SwiftUI
 
 struct SideBarButton<Page: Navigable>: View {
-    @Environment(\.navigationSelection) var navigationSelection
-    @Environment(\.setNavigationSelection) var setNavigationSelection
-    //@Environment(\.navigationStack) var navigationStack
-    @Environment(\.setNavigationPath) var setNavigationStack
+    @Environment(\.navigationSelection) private var navigationSelection
+    @Environment(\.setNavigationSelection) private var setNavigationSelection
+    @Environment(\.setNavigationPath) private var setNavigationStack
     
     let page: Page
     
     var isActive: Bool {
-        navigationSelection?.id as? Page.ID == page.id
+        (navigationSelection as? Page) == page
     }
-    
-    @State var isAnimating: Bool = false
     
     var body: some View {
         Button(action: {
-            print(isActive)
-            isAnimating.toggle()
             if isActive {
                 setNavigationStack.callAsFunction(stack: [])
             } else {
@@ -51,4 +46,3 @@ struct SideBarButton<Page: Navigable>: View {
         #endif
     }
 }
-

@@ -8,21 +8,18 @@
 import SwiftUI
 
 struct TabBarButton<Page: Navigable>: View {
-    @Environment(\.navigationSelection) var navigationSelection
-    @Environment(\.setNavigationSelection) var setNavigationSelection
-    @Environment(\.setNavigationPath) var setNavigationPath
+    @Environment(\.navigationSelection) private var navigationSelection
+    @Environment(\.setNavigationSelection) private var setNavigationSelection
+    @Environment(\.setNavigationPath) private var setNavigationPath
     
     let page: Page
     
     var isActive: Bool {
-        navigationSelection?.id as? Page.ID == page.id
+        (navigationSelection as? Page) == page
     }
-    
-    @State var isAnimating: Bool = false
     
     var body: some View {
         Button(action: {
-            isAnimating.toggle()
             if isActive {
                 setNavigationPath.callAsFunction(stack: [])
             } else {

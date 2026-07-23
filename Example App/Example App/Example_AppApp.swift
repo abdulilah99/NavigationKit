@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct Example_AppApp: App {
-    @State var router = Router()
+    @State private var router = Router()
     
     var body: some Scene {
         WindowGroup {

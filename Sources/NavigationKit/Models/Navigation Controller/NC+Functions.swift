@@ -16,7 +16,7 @@ public extension NavigationController {
         let targetTab = tab ?? selectedTab
         
         if let existingStack = tabs.first(where: { $0.page == targetTab }) {
-            if let index = existingStack.path.firstIndex(where: { $0.hashValue == page.hashValue }) {
+            if let index = existingStack.path.firstIndex(of: page) {
                 let removalIndex = index + 1
                 existingStack.path.removeSubrange(removalIndex..<existingStack.path.count)
             } else {

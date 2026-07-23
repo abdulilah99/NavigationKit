@@ -18,7 +18,8 @@ public struct NavigationView<Controller: NavigationController>: View {
         view
             .environment(\.navigationSelection, controller.selectedTab)
             .environment(\.setNavigationSelection, SetNavigationSelectionAction(action: { selection in
-                controller.selectedTab = selection as! Controller.Tab
+                guard let selection = selection as? Controller.Tab else { return }
+                controller.selectedTab = selection
             }))
     }
     

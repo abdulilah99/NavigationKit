@@ -8,9 +8,9 @@
 import SwiftUI
 
 public struct CustomNavigationView<Page: Navigable>: View {
-    @Environment(\.navigationSelection) var selection
+    @Environment(\.navigationSelection) private var selection
     
-    @Namespace var namespace
+    @Namespace private var namespace
     
     var tabs: [NavigationTab<Page>]
     
@@ -22,9 +22,14 @@ public struct CustomNavigationView<Page: Navigable>: View {
         SideBarView(tabs) {
             TabBarView(tabs) {
                 ForEach(tabs) { tab in
+                    let isSelected = (selection as? Page) == tab.page
+
                     ControllerView<Page>()
                         .environment(tab)
-                        .opacity(selection?.hashValue != tab.page.hashValue ? 0 : 1)
+                        .opacity(isSelected ? 1 : 0)
+                        .allowsHitTesting(isSelected)
+                        .disabled(!isSelected)
+                        .accessibilityHidden(!isSelected)
                 }
             }
         }
@@ -33,7 +38,7 @@ public struct CustomNavigationView<Page: Navigable>: View {
 }
 
 fileprivate struct ControllerView<Page: Navigable>: View {
-    @Environment(NavigationTab<Page>.self) var tab
+    @Environment(NavigationTab<Page>.self) private var tab
     
     var body: some View {
         @Bindable var tab = tab
@@ -49,4 +54,3 @@ fileprivate struct ControllerView<Page: Navigable>: View {
         }
     }
 }
-

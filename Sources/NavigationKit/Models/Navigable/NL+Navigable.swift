@@ -8,9 +8,9 @@
 import SwiftUI
 
 public extension NavigationLink where Destination == Never, Label == SwiftUI.Label<Text, Image> {
-     init(value: any Navigable) {
-         self.init(value: value) {
-             Label(title: { Text(value.titleKey) }) { value.image }
-         }
-     }
- }
+    init<Value: Navigable>(value: Value) {
+        self.init(value: value) {
+            Label(title: { Text(value.titleKey) }) { value.image }
+        }
+    }
+}

@@ -12,7 +12,7 @@ private struct SheetsPresenter<M: Modal>: ViewModifier {
     var currentIndex: Int = 0
     var isFullScreen: Bool
     
-    @State var currentItem: M? = nil
+    @State private var currentItem: M? = nil
     
     var currentItemBinding: Binding<Bool> {
         .init(get: { currentItem != nil }) { newValue in
