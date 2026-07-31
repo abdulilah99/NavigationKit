@@ -17,8 +17,6 @@ public protocol Navigable: Identifiable, Hashable, Equatable {
     @ViewBuilder var destination: Destination { get }
     var modifier: Modifier { get }
     
-    var placement: BarPlacement { get }
-    
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
     var role: TabRole? { get }
 }
@@ -26,24 +24,10 @@ public protocol Navigable: Identifiable, Hashable, Equatable {
 public extension Navigable {
     var modifier: some ViewModifier { EmptyModifier() }
     
-    var placement: BarPlacement { .all }
-    
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
     var role: TabRole? { nil }
 }
 
 public extension Navigable where Modifier == EmptyModifier {
     var modifier: EmptyModifier { EmptyModifier() }
-}
-
-public enum BarPlacement: Hashable, Codable {
-    case all, side, tab, none
-    
-    var isInSideBar: Bool { [.all, .side].contains(self) }
-    
-    var isInTabBar: Bool { [.all, .tab].contains(self) }
-    
-    var sideBarVisibility: Visibility { isInSideBar ? .visible : .hidden }
-    
-    var tabBarVisibility: Visibility { isInTabBar ? .visible : .hidden }
 }

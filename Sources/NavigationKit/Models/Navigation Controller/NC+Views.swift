@@ -8,39 +8,40 @@
 import SwiftUI
 
 public extension NavigationController {
-    var useCustomNavigationView: Bool {
-        false
+    private var selection: Binding<Destination?> {
+        Binding(
+            get: { self.selectedRoot },
+            set: { newValue in
+                if let newValue {
+                    self.selectedRoot = newValue
+                }
+            }
+        )
     }
-    
-    @ViewBuilder
-    private var iOS17Compatible: some View {
-        if useCustomNavigationView {
-            CustomNavigationView(tabs: tabs)
-        } else {
-            OldTabNavigationView(tabs: tabs)
-        }
+
+    private var legacyView: some View {
+        LegacyNavigationView(roots: roots, selection: selection)
     }
     
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
-    private var iOS18Compatible: some View {
-        TabNavigationView(tabs: tabs)
+    private var modernView: some View {
+        TabNavigationView(roots: roots, selection: selection)
     }
     
     @ViewBuilder
     private var view: some View {
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, *) {
-            iOS18Compatible
+            modernView
         } else {
-            iOS17Compatible
+            legacyView
         }
     }
     
+    /// Creates NavigationKit's standard platform-adaptive navigation UI.
+    ///
+    /// Build custom navigation chrome directly from the controller's roots,
+    /// selection, and navigation operations instead.
     func makeView() -> some View {
         view
-            .environment(\.navigationSelection, selectedTab)
-            .environment(\.setNavigationSelection, SetNavigationSelectionAction(action: { selection in
-                guard let selection = selection as? Tab else { return }
-                self.selectedTab = selection
-            }))
     }
 }

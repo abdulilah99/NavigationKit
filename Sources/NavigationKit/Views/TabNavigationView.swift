@@ -8,38 +8,63 @@
 import SwiftUI
 
 @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
-struct TabNavigationView<Page: Navigable>: View {
-    @Environment(\.navigationSelection) var navigationSelection
-    @Environment(\.setNavigationSelection) var setNavigationSelection
+struct TabNavigationView<Destination: Navigable>: View {
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
     
     @Namespace private var namespace
     
-    var tabs: [NavigationTab<Page>]
+    @Binding private var selection: Destination?
+    private var roots: [NavigationRoot<Destination>]
     
-    public init(tabs: [NavigationTab<Page>]) {
-        self.tabs = tabs
+    init(
+        roots: [NavigationRoot<Destination>],
+        selection: Binding<Destination?>
+    ) {
+        self.roots = roots
+        self._selection = selection
     }
-    
-    var selection: Binding<Page?> {
-        Binding(get: { navigationSelection as? Page }) { newValue in
-            if let newValue {
-                setNavigationSelection.callAsFunction(selection: newValue)
-            }
-        }
+
+    private var presentationContext: NavigationPresentationContext {
+        #if os(tvOS)
+        .television
+        #elseif os(macOS)
+        .desktop
+        #elseif os(visionOS)
+        .spatial
+        #else
+        horizontalSizeClass == .compact ? .compact : .expanded
+        #endif
     }
     
     public var body: some View {
-        TabView(selection: selection) {
-            ForEach(tabs) { tab in
-                Tab(value: tab.page, role: tab.page.role, content: { tab.content }) {
-                    Label(title: { Text(tab.page.titleKey) }) { tab.page.image }
+        TabView(selection: $selection) {
+            ForEach(roots) { root in
+                let surfaces = root.surfaces(in: presentationContext)
+
+                Tab(
+                    value: root.destination,
+                    role: root.destination.role,
+                    content: { root.content }
+                ) {
+                    Label(
+                        title: { Text(root.destination.titleKey) },
+                        icon: { root.destination.image }
+                    )
                 }
-                .tabPlacement(!tab.page.placement.isInTabBar ? .sidebarOnly : .automatic)
-                #if os(iOS) || os(macOS)
-                .defaultVisibility(tab.page.placement.tabBarVisibility, for: .tabBar)
+                .tabPlacement(surfaces.contains(.tabBar) ? .automatic : .sidebarOnly)
+                #if os(iOS) || os(macOS) || os(visionOS)
+                .defaultVisibility(
+                    surfaces.contains(.tabBar) ? .visible : .hidden,
+                    for: .tabBar
+                )
                 #endif
-                #if os(iOS)
-                .defaultVisibility(tab.page.placement.sideBarVisibility, for: .sidebar)
+                #if os(iOS) || os(visionOS)
+                .defaultVisibility(
+                    surfaces.contains(.sidebar) ? .visible : .hidden,
+                    for: .sidebar
+                )
                 #endif
             }
         }

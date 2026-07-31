@@ -9,15 +9,13 @@ import SwiftUI
 
 @MainActor
 public protocol NavigationController: AnyObject, Observable {
-    associatedtype Tab: Navigable
+    associatedtype Destination: Navigable
     
-    var selectedTab: Tab { get set }
-    func select(tab: Tab)
+    var selectedRoot: Destination { get set }
+    func select(root: Destination)
     
-    var tabs: [NavigationTab<Tab>] { get set }
-    func navigate(to page: Tab, on tab: Tab?)
+    var roots: [NavigationRoot<Destination>] { get set }
+    func navigate(to destination: Destination, on root: Destination?)
     
-    var useCustomNavigationView: Bool { get }
-    
-    subscript(tab: Tab) -> [Tab] { get set }
+    subscript(root: Destination) -> [Destination] { get set }
 }

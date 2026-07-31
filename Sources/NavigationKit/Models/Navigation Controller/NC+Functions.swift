@@ -8,29 +8,42 @@
 import Foundation
 
 public extension NavigationController {
-    func select(tab: Tab) {
-        selectedTab = tab
+    func select(root: Destination) {
+        guard roots.contains(where: { $0.destination == root }) else {
+            return
+        }
+
+        selectedRoot = root
     }
     
-    func navigate(to page: Tab, on tab: Tab? = nil) {
-        let targetTab = tab ?? selectedTab
+    func navigate(
+        to destination: Destination,
+        on root: Destination? = nil
+    ) {
+        let targetRoot = root ?? selectedRoot
         
-        if let existingStack = tabs.first(where: { $0.page == targetTab }) {
-            if let index = existingStack.path.firstIndex(of: page) {
-                let removalIndex = index + 1
-                existingStack.path.removeSubrange(removalIndex..<existingStack.path.count)
-            } else {
-                existingStack.path.append(page)
-            }
+        guard let existingStack = roots.first(
+            where: { $0.destination == targetRoot }
+        ) else {
+            return
+        }
+
+        if let index = existingStack.path.firstIndex(of: destination) {
+            let removalIndex = index + 1
+            existingStack.path.removeSubrange(removalIndex..<existingStack.path.count)
         } else {
-            tabs.append(NavigationTab(page: targetTab, path: [page]))
+            existingStack.path.append(destination)
         }
         
-        selectedTab = targetTab
+        selectedRoot = targetRoot
     }
     
-    subscript(tab: Tab) -> [Tab] {
-        get { tabs.first(where: { $0.page == tab })?.path ?? [] }
-        set { tabs.first(where: { $0.page == tab })?.path = newValue }
+    subscript(root: Destination) -> [Destination] {
+        get {
+            roots.first(where: { $0.destination == root })?.path ?? []
+        }
+        set {
+            roots.first(where: { $0.destination == root })?.path = newValue
+        }
     }
 }
