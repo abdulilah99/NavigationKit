@@ -13,7 +13,7 @@ public extension NavigationController {
             get: { self.selectedRoot },
             set: { newValue in
                 if let newValue {
-                    self.selectedRoot = newValue
+                    self.select(root: newValue)
                 }
             }
         )
@@ -23,14 +23,14 @@ public extension NavigationController {
         LegacyNavigationView(roots: roots, selection: selection)
     }
     
-    @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
+    @available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
     private var modernView: some View {
         TabNavigationView(roots: roots, selection: selection)
     }
     
     @ViewBuilder
     private var view: some View {
-        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, *) {
+        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *) {
             modernView
         } else {
             legacyView

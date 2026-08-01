@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import NavigationKit
 
 @main
 struct Example_AppApp: App {
-    @State private var router = Router()
+    @State private var navigation = makeExampleNavigationController()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(router)
+                .environment(navigation)
         }
     }
 }

@@ -12,12 +12,9 @@
 		43127EF12D8F650B0041111D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43127EE82D8F650B0041111D /* Preview Assets.xcassets */; };
 		43127EF22D8F650B0041111D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43127EEA2D8F650B0041111D /* Assets.xcassets */; };
 		43127EF42D8F655D0041111D /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127EF32D8F655D0041111D /* NavigationController.swift */; };
-		43127EF72D8F658D0041111D /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43127EF62D8F658D0041111D /* NavigationKit */; };
-		43127EFA2D8F65F60041111D /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43127EF92D8F65F60041111D /* NavigationKit */; };
-		43127EFD2D8F661C0041111D /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43127EFC2D8F661C0041111D /* NavigationKit */; };
 		43127EFF2D8F669B0041111D /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127EFE2D8F669B0041111D /* Page.swift */; };
-		43127F012D8F6F6F0041111D /* Sheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127F002D8F6F6F0041111D /* Sheet.swift */; };
-		437A3CF02E43172100D2C537 /* ModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 437A3CEF2E43172100D2C537 /* ModalKit */; };
+		4337DEFE301E6CC7006BA817 /* ModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4337DEFD301E6CC7006BA817 /* ModalKit */; };
+		4337DF00301E6CC7006BA817 /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4337DEFF301E6CC7006BA817 /* NavigationKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,7 +26,6 @@
 		43127EED2D8F650B0041111D /* Example_AppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Example_AppApp.swift; sourceTree = "<group>"; };
 		43127EF32D8F655D0041111D /* NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		43127EFE2D8F669B0041111D /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
-		43127F002D8F6F6F0041111D /* Sheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,10 +33,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43127EF72D8F658D0041111D /* NavigationKit in Frameworks */,
-				437A3CF02E43172100D2C537 /* ModalKit in Frameworks */,
-				43127EFA2D8F65F60041111D /* NavigationKit in Frameworks */,
-				43127EFD2D8F661C0041111D /* NavigationKit in Frameworks */,
+				4337DEFE301E6CC7006BA817 /* ModalKit in Frameworks */,
+				4337DF00301E6CC7006BA817 /* NavigationKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,7 +73,6 @@
 				43127EED2D8F650B0041111D /* Example_AppApp.swift */,
 				43127EEB2D8F650B0041111D /* ContentView.swift */,
 				43127EFE2D8F669B0041111D /* Page.swift */,
-				43127F002D8F6F6F0041111D /* Sheet.swift */,
 				43127EF32D8F655D0041111D /* NavigationController.swift */,
 				43127EEA2D8F650B0041111D /* Assets.xcassets */,
 				43127EE92D8F650B0041111D /* Preview Content */,
@@ -111,10 +104,8 @@
 			);
 			name = "Example App";
 			packageProductDependencies = (
-				43127EF62D8F658D0041111D /* NavigationKit */,
-				43127EF92D8F65F60041111D /* NavigationKit */,
-				43127EFC2D8F661C0041111D /* NavigationKit */,
-				437A3CEF2E43172100D2C537 /* ModalKit */,
+				4337DEFD301E6CC7006BA817 /* ModalKit */,
+				4337DEFF301E6CC7006BA817 /* NavigationKit */,
 			);
 			productName = "Example App";
 			productReference = 43127ED62D8F64FA0041111D /* Example App.app */;
@@ -145,7 +136,7 @@
 			mainGroup = 43127ECD2D8F64FA0041111D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				43127EFB2D8F661C0041111D /* XCLocalSwiftPackageReference "../../NavigationKit" */,
+				4337DEFC301E6CC7006BA817 /* XCLocalSwiftPackageReference "../../NavigationKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 43127ED72D8F64FA0041111D /* Products */;
@@ -177,7 +168,6 @@
 				43127EEF2D8F650B0041111D /* ContentView.swift in Sources */,
 				43127EF42D8F655D0041111D /* NavigationController.swift in Sources */,
 				43127EFF2D8F669B0041111D /* Page.swift in Sources */,
-				43127F012D8F6F6F0041111D /* Sheet.swift in Sources */,
 				43127EF02D8F650B0041111D /* Example_AppApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -303,8 +293,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletv*]" = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Example App/Example_App.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Example App/Example_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Example App/Preview Content\"";
@@ -322,19 +313,20 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cosmosdevsiq.Example-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 2.1;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,7";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 1.0;
 			};
 			name = Debug;
 		};
@@ -342,8 +334,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletv*]" = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Example App/Example_App.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Example App/Example_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Example App/Preview Content\"";
@@ -361,19 +354,20 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cosmosdevsiq.Example-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 2.1;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,7";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 1.0;
 			};
 			name = Release;
 		};
@@ -401,29 +395,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		43127EFB2D8F661C0041111D /* XCLocalSwiftPackageReference "../../NavigationKit" */ = {
+		4337DEFC301E6CC7006BA817 /* XCLocalSwiftPackageReference "../../NavigationKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../NavigationKit;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		43127EF62D8F658D0041111D /* NavigationKit */ = {
+		4337DEFD301E6CC7006BA817 /* ModalKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = NavigationKit;
-		};
-		43127EF92D8F65F60041111D /* NavigationKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = NavigationKit;
-		};
-		43127EFC2D8F661C0041111D /* NavigationKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = NavigationKit;
-		};
-		437A3CEF2E43172100D2C537 /* ModalKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 43127EFB2D8F661C0041111D /* XCLocalSwiftPackageReference "../../NavigationKit" */;
 			productName = ModalKit;
+		};
+		4337DEFF301E6CC7006BA817 /* NavigationKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NavigationKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

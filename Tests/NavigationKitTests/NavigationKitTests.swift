@@ -1,4 +1,3 @@
-import Observation
 import SwiftUI
 import Testing
 @testable import NavigationKit
@@ -37,27 +36,20 @@ private enum TestPage: Navigable {
 }
 
 @MainActor
-@Observable
-private final class TestRouter: NavigationController {
-    var selectedRoot: TestPage
-    var roots: [NavigationRoot<TestPage>]
-
-    init(
-        selectedRoot: TestPage = .home,
-        roots: [NavigationRoot<TestPage>] = [
-            NavigationRoot(destination: .home),
-            NavigationRoot(destination: .library),
-        ]
-    ) {
-        self.selectedRoot = selectedRoot
-        self.roots = roots
-    }
+private func makeController(
+    selectedRoot: TestPage = .home,
+    roots: [NavigationRoot<TestPage>] = [
+        NavigationRoot(destination: .home),
+        NavigationRoot(destination: .library),
+    ]
+) -> NavigationController<TestPage> {
+    NavigationController(roots: roots, selectedRoot: selectedRoot)
 }
 
 @MainActor
 @Test
 func navigateAppendsUnequalDestinationsEvenWhenHashesCollide() {
-    let router = TestRouter()
+    let router = makeController()
 
     router.navigate(to: .details(1))
     router.navigate(to: .details(2))
@@ -70,7 +62,7 @@ func navigateAppendsUnequalDestinationsEvenWhenHashesCollide() {
 @MainActor
 @Test
 func navigatingToAnExistingDestinationTrimsEverythingAfterIt() {
-    let router = TestRouter()
+    let router = makeController()
     router[.home] = [.details(1), .details(2), .details(3)]
 
     router.navigate(to: .details(2))
@@ -81,7 +73,7 @@ func navigatingToAnExistingDestinationTrimsEverythingAfterIt() {
 @MainActor
 @Test
 func navigateOnAnotherRootMutatesAndSelectsThatRoot() {
-    let router = TestRouter()
+    let router = makeController()
 
     router.navigate(to: .details(42), on: .library)
 
@@ -93,7 +85,7 @@ func navigateOnAnotherRootMutatesAndSelectsThatRoot() {
 @MainActor
 @Test
 func selectingRootPreservesEveryRootPath() {
-    let router = TestRouter()
+    let router = makeController()
     router[.home] = [.library, .details(1)]
     router[.library] = [.details(2)]
 
@@ -108,7 +100,7 @@ func selectingRootPreservesEveryRootPath() {
 @MainActor
 @Test
 func selectingAnUnconfiguredRootDoesNothing() {
-    let router = TestRouter()
+    let router = makeController()
 
     router.select(root: .details(99))
 
@@ -118,8 +110,37 @@ func selectingAnUnconfiguredRootDoesNothing() {
 
 @MainActor
 @Test
+func navigationControllerDefaultsToItsFirstRoot() {
+    let controller = NavigationController<TestPage>(roots: [
+        NavigationRoot(destination: .library),
+        NavigationRoot(destination: .home),
+    ])
+
+    #expect(controller.selectedRoot == .library)
+    #expect(controller.roots.map(\.destination) == [.library, .home])
+}
+
+@MainActor
+@Test
+func rootCatalogRequiresUniqueDestinations() {
+    let uniqueRoots = [
+        NavigationRoot(destination: TestPage.home),
+        NavigationRoot(destination: TestPage.library),
+    ]
+    let duplicateRoots = [
+        NavigationRoot(destination: TestPage.home),
+        NavigationRoot(destination: TestPage.home),
+    ]
+
+    // TestPage deliberately gives every value the same hash.
+    #expect(NavigationController<TestPage>.hasUniqueDestinations(uniqueRoots))
+    #expect(!NavigationController<TestPage>.hasUniqueDestinations(duplicateRoots))
+}
+
+@MainActor
+@Test
 func navigatingOnAnUnconfiguredRootDoesNothing() {
-    let router = TestRouter()
+    let router = makeController()
 
     router.navigate(to: .details(1), on: .details(99))
 
@@ -132,7 +153,7 @@ func navigatingOnAnUnconfiguredRootDoesNothing() {
 @MainActor
 @Test
 func aConfiguredRootCanAlsoAppearInAnotherRootPath() {
-    let router = TestRouter()
+    let router = makeController()
 
     router.navigate(to: .library, on: .home)
 
@@ -205,7 +226,7 @@ func rootSurfacePolicyControlsPlacement() {
 
 @MainActor
 @Test
-func readingSurfacePlacementDoesNotChangeNavigationState() {
+func readingSurfacePlacementDoesNotChangeControllerState() {
     let policy = NavigationSurfacePolicy(
         compact: .tabBar,
         expanded: .sidebar,
@@ -218,7 +239,7 @@ func readingSurfacePlacementDoesNotChangeNavigationState() {
         path: [.details(1)],
         surfacePolicy: policy
     )
-    let router = TestRouter(roots: [
+    let router = makeController(roots: [
         root,
         NavigationRoot(destination: .library),
     ])

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-@available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
 struct TabNavigationView<Destination: Navigable>: View {
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

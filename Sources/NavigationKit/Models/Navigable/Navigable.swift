@@ -17,14 +17,14 @@ public protocol Navigable: Identifiable, Hashable, Equatable {
     @ViewBuilder var destination: Destination { get }
     var modifier: Modifier { get }
     
-    @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
+    @available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
     var role: TabRole? { get }
 }
 
 public extension Navigable {
     var modifier: some ViewModifier { EmptyModifier() }
     
-    @available(iOS 18.0, macOS 15.0, tvOS 18.0, *)
+    @available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
     var role: TabRole? { nil }
 }
 

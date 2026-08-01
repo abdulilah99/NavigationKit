@@ -5,15 +5,9 @@
 //  Created by Abdulilah on 03/03/2025.
 //
 
-import Foundation
-
 public extension NavigationController {
     func select(root: Destination) {
-        guard roots.contains(where: { $0.destination == root }) else {
-            return
-        }
-
-        selectedRoot = root
+        updateSelection(to: root)
     }
     
     func navigate(
@@ -22,9 +16,7 @@ public extension NavigationController {
     ) {
         let targetRoot = root ?? selectedRoot
         
-        guard let existingStack = roots.first(
-            where: { $0.destination == targetRoot }
-        ) else {
+        guard let existingStack = self.root(for: targetRoot) else {
             return
         }
 
@@ -35,15 +27,15 @@ public extension NavigationController {
             existingStack.path.append(destination)
         }
         
-        selectedRoot = targetRoot
+        updateSelection(to: targetRoot)
     }
     
     subscript(root: Destination) -> [Destination] {
         get {
-            roots.first(where: { $0.destination == root })?.path ?? []
+            self.root(for: root)?.path ?? []
         }
         set {
-            roots.first(where: { $0.destination == root })?.path = newValue
+            self.root(for: root)?.path = newValue
         }
     }
 }
