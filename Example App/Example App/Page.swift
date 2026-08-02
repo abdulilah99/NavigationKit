@@ -113,6 +113,10 @@ private struct HomeView: View {
             }
 
             Section("Modal presentation stacks") {
+                Button("Present Article 10 using the configured style") {
+                    navigation.present(.article(10))
+                }
+
                 Button("Present Article 10 as a sheet") {
                     navigation.present(.article(10), as: .sheet)
                 }
@@ -128,10 +132,65 @@ private struct HomeView: View {
                 }
             }
 
+            ControllerConfigurationSection(navigation: navigation)
             NavigationStateSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
         .navigationTitle("Home")
+    }
+}
+
+private struct ControllerConfigurationSection: View {
+    let navigation: NavigationController<Page>
+
+    var body: some View {
+        @Bindable var navigation = navigation
+
+        Section("Controller configuration") {
+            Picker(
+                "Default modal style",
+                selection: $navigation.configuration.defaultPresentationStyle
+            ) {
+                Text("Sheet").tag(NavigationPresentationStyle.sheet)
+                Text("Full screen").tag(NavigationPresentationStyle.fullScreen)
+            }
+
+            HStack {
+                Text("Maximum modal depth")
+
+                Spacer()
+
+                Button {
+                    navigation.configuration.maximumPresentationDepth -= 1
+                } label: {
+                    Label("Decrease", systemImage: "minus")
+                        .labelStyle(.iconOnly)
+                }
+                .disabled(
+                    navigation.configuration.maximumPresentationDepth == 0
+                )
+
+                Text("\(navigation.configuration.maximumPresentationDepth)")
+                    .monospacedDigit()
+
+                Button {
+                    navigation.configuration.maximumPresentationDepth += 1
+                } label: {
+                    Label("Increase", systemImage: "plus")
+                        .labelStyle(.iconOnly)
+                }
+                .disabled(
+                    navigation.configuration.maximumPresentationDepth >= 16
+                )
+            }
+
+            Text(
+                navigation.canPresent
+                    ? "The controller can present another layer."
+                    : "The presentation limit has been reached."
+            )
+            .foregroundStyle(.secondary)
+        }
     }
 }
 

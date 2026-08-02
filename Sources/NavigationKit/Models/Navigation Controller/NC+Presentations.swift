@@ -4,6 +4,11 @@
 //
 
 public extension NavigationController {
+    /// Whether the configured presentation stack has room for another layer.
+    var canPresent: Bool {
+        presentations.count < configuration.maximumPresentationDepth
+    }
+
     /// Navigates inside a presented destination's independent route path.
     ///
     /// The operation uses the same first-match reuse behavior as root
@@ -19,17 +24,42 @@ public extension NavigationController {
         navigatePath(&presentation.path, to: destination)
     }
 
-    /// Appends a new native presentation layer.
+    /// Appends a new native presentation layer using the configured default
+    /// presentation style.
     ///
-    /// Presentations use occurrence identity, so presenting the same
-    /// destination repeatedly creates distinct stack entries.
+    /// Returns `nil` without changing controller state when the configured
+    /// maximum presentation depth has been reached.
     @discardableResult
     func present(
         _ destination: Destination,
-        as style: NavigationPresentationStyle = .sheet,
         path: [Destination] = [],
         onDismiss: (@MainActor () -> Void)? = nil
-    ) -> NavigationPresentation<Destination> {
+    ) -> NavigationPresentation<Destination>? {
+        present(
+            destination,
+            as: configuration.defaultPresentationStyle,
+            path: path,
+            onDismiss: onDismiss
+        )
+    }
+
+    /// Appends a new native presentation layer using an explicit style.
+    ///
+    /// Presentations use occurrence identity, so presenting the same
+    /// destination repeatedly creates distinct stack entries. Returns `nil`
+    /// without changing controller state when the configured maximum
+    /// presentation depth has been reached.
+    @discardableResult
+    func present(
+        _ destination: Destination,
+        as style: NavigationPresentationStyle,
+        path: [Destination] = [],
+        onDismiss: (@MainActor () -> Void)? = nil
+    ) -> NavigationPresentation<Destination>? {
+        guard canPresent else {
+            return nil
+        }
+
         let presentation = NavigationPresentation(
             destination: destination,
             style: style,

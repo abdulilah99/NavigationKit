@@ -51,11 +51,12 @@ import NavigationKit
 
 ## Core model
 
-NavigationKit uses four core types:
+NavigationKit uses five core types:
 
 - `Navigable` describes every destination in the application.
 - `NavigationRoot` gives a configured top-level destination an independent path and presentation policy.
 - `NavigationPresentation` represents one stable occurrence in the modal stack and owns an independent route path.
+- `NavigationControllerConfiguration` contains mutable controller-wide policies.
 - `NavigationController` owns the fixed root catalog, selected root, modal stack, and navigation commands.
 
 “Tab,” “route,” “sheet,” and “full screen” are presentation terms rather than separate destination types.
@@ -123,6 +124,10 @@ func makeNavigationController() -> NavigationController<Page> {
             NavigationRoot(destination: .library),
             NavigationRoot(destination: .settings),
         ],
+        configuration: NavigationControllerConfiguration(
+            defaultPresentationStyle: .sheet,
+            maximumPresentationDepth: 8
+        ),
         selectedRoot: .home
     )
 }
@@ -229,6 +234,35 @@ navigation[.library] = [
 
 Reading an unconfigured root returns an empty path. Writing one is ignored. Dedicated push, pop, replace, and reset commands are planned for the evolving 0.2 API.
 
+## Controller configuration
+
+`NavigationControllerConfiguration` contains policies that apply across the
+whole controller:
+
+```swift
+let configuration = NavigationControllerConfiguration(
+    defaultPresentationStyle: .sheet,
+    maximumPresentationDepth: 8
+)
+
+let navigation = NavigationController(
+    roots: roots,
+    configuration: configuration
+)
+```
+
+The configuration is mutable after initialization:
+
+```swift
+navigation.configuration.defaultPresentationStyle = .fullScreen
+navigation.configuration.maximumPresentationDepth = 4
+```
+
+Configuration changes affect future operations. They do not rewrite existing
+paths or presentations. Lowering the maximum below the current presentation
+depth preserves the current stack and blocks new presentations until enough
+layers are dismissed. A maximum depth of zero disables new presentations.
+
 ## Modal presentation stacks
 
 Modal presentation is part of `NavigationController`; there is no separate modal destination type or controller.
@@ -240,11 +274,25 @@ navigation.present(.settings, as: .sheet)
 navigation.present(.article(id: 42), as: .fullScreen)
 ```
 
-`present` always appends a new occurrence and returns it:
+Omit `as:` to use `configuration.defaultPresentationStyle`:
 
 ```swift
-let presentation = navigation.present(.article(id: 42))
+navigation.present(.article(id: 42))
 ```
+
+`present` appends a new occurrence while the controller is below its configured
+maximum depth. It returns `nil` without changing state when the limit has been
+reached:
+
+```swift
+guard let presentation = navigation.present(.article(id: 42)) else {
+    return
+}
+```
+
+Use `navigation.canPresent` when presentation availability should be reflected
+in custom UI. Rejected presentations do not retain or invoke their dismissal
+callbacks.
 
 Occurrence identity is separate from destination identity. Presenting `.article(id: 42)` twice produces two distinct stack entries, which is useful for recursive workflows and repeated detail contexts.
 
@@ -487,6 +535,7 @@ The example demonstrates:
 - Repeated modal occurrences of the same destination.
 - Independent route paths inside modal presentations.
 - Top, counted, cascading, and complete modal dismissal.
+- Runtime editing of controller-wide presentation configuration.
 - Platform-specific surface policy.
 - A programmatically selectable root hidden from compact modern chrome.
 - A native search-role root.
@@ -518,6 +567,7 @@ Not yet included in the finalized API:
 - Tabs, routes, sheets, and full-screen presentations share one destination type.
 - Modal occurrences have stable identity independent from destination identity.
 - Repeated destination values are valid in a modal stack.
+- Modal-stack growth is bounded by mutable controller configuration.
 - Removing a presentation removes every presentation above it.
 - Dismissal callbacks run exactly once from the top layer downward.
 - Surface placement never changes command behavior.
@@ -535,4 +585,4 @@ Run the package tests with:
 swift test
 ```
 
-The test suite covers path reuse, hash collisions, cross-root navigation, missing-root no-ops, fixed catalog validation, independent paths, surface policies, repeated modal occurrences, modal paths, cascading dismissal, callbacks, and reentrant presentation.
+The test suite covers path reuse, hash collisions, cross-root navigation, missing-root no-ops, fixed catalog validation, independent paths, surface policies, controller configuration, bounded modal growth, repeated modal occurrences, modal paths, cascading dismissal, callbacks, and reentrant presentation.

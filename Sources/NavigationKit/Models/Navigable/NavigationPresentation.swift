@@ -23,7 +23,7 @@ public final class NavigationPresentation<Destination: Navigable>: Identifiable,
     public init(
         id: UUID = UUID(),
         destination: Destination,
-        style: NavigationPresentationStyle = .sheet,
+        style: NavigationPresentationStyle,
         path: [Destination] = []
     ) {
         self.id = id

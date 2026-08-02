@@ -14,6 +14,8 @@ public final class NavigationController<Destination: Navigable> {
     public internal(set) var selectedRoot: Destination
     public internal(set) var presentations: [NavigationPresentation<Destination>]
 
+    public var configuration: NavigationControllerConfiguration
+
     @ObservationIgnored
     private var presentationDismissalActions: [
         NavigationPresentation<Destination>.ID: @MainActor () -> Void
@@ -22,17 +24,20 @@ public final class NavigationController<Destination: Navigable> {
     public init(
         roots: [NavigationRoot<Destination>],
         selectedRoot: Destination? = nil,
-        presentations: [NavigationPresentation<Destination>] = []
+        presentations: [NavigationPresentation<Destination>] = [],
+        configuration: NavigationControllerConfiguration = .default
     ) {
         let initialSelection = Self.validateConfiguration(
             roots: roots,
             selectedRoot: selectedRoot,
-            presentations: presentations
+            presentations: presentations,
+            configuration: configuration
         )
 
         self.roots = roots
         self.selectedRoot = initialSelection
         self.presentations = presentations
+        self.configuration = configuration
     }
 
     func storeDismissalAction(

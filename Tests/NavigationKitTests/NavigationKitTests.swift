@@ -38,12 +38,17 @@ private enum TestPage: Navigable {
 @MainActor
 private func makeController(
     selectedRoot: TestPage = .home,
+    configuration: NavigationControllerConfiguration = .default,
     roots: [NavigationRoot<TestPage>] = [
         NavigationRoot(destination: .home),
         NavigationRoot(destination: .library),
     ]
 ) -> NavigationController<TestPage> {
-    NavigationController(roots: roots, selectedRoot: selectedRoot)
+    NavigationController(
+        roots: roots,
+        selectedRoot: selectedRoot,
+        configuration: configuration
+    )
 }
 
 @MainActor
@@ -118,6 +123,111 @@ func navigationControllerDefaultsToItsFirstRoot() {
 
     #expect(controller.selectedRoot == .library)
     #expect(controller.roots.map(\.destination) == [.library, .home])
+}
+
+@Test
+func navigationConfigurationHasSafePresentationDefaults() {
+    let configuration = NavigationControllerConfiguration.default
+
+    #expect(configuration.defaultPresentationStyle == .sheet)
+    #expect(configuration.maximumPresentationDepth == 8)
+}
+
+@MainActor
+@Test
+func controllerConfigurationIsEditableAndControlsFuturePresentations() throws {
+    let navigation = makeController()
+    navigation.configuration.defaultPresentationStyle = .fullScreen
+    navigation.configuration.maximumPresentationDepth = 1
+
+    let presentation = try #require(navigation.present(.details(1)))
+
+    #expect(presentation.style == .fullScreen)
+    #expect(!navigation.canPresent)
+
+    var rejectedDismissalRan = false
+    let rejectedPresentation = navigation.present(.details(2)) {
+        rejectedDismissalRan = true
+    }
+
+    #expect(rejectedPresentation == nil)
+    #expect(navigation.presentations.map(\.destination) == [.details(1)])
+
+    navigation.dismissPresentation()
+
+    #expect(!rejectedDismissalRan)
+    #expect(navigation.canPresent)
+    #expect(navigation.present(.details(2))?.style == .fullScreen)
+}
+
+@MainActor
+@Test
+func explicitPresentationStyleOverridesTheConfiguredDefault() throws {
+    let navigation = makeController(
+        configuration: NavigationControllerConfiguration(
+            defaultPresentationStyle: .fullScreen
+        )
+    )
+
+    let presentation = try #require(
+        navigation.present(.details(1), as: .sheet)
+    )
+
+    #expect(presentation.style == .sheet)
+}
+
+@MainActor
+@Test
+func loweringPresentationDepthDoesNotRewriteExistingState() {
+    let navigation = makeController()
+    navigation.present(.details(1))
+    navigation.present(.details(2))
+
+    navigation.configuration.maximumPresentationDepth = 1
+
+    #expect(navigation.presentations.map(\.destination) == [
+        .details(1),
+        .details(2),
+    ])
+    #expect(!navigation.canPresent)
+
+    navigation.dismissPresentations(count: 2)
+
+    #expect(navigation.canPresent)
+}
+
+@MainActor
+@Test
+func zeroPresentationDepthDisablesPresentation() {
+    let navigation = makeController(
+        configuration: NavigationControllerConfiguration(
+            maximumPresentationDepth: 0
+        )
+    )
+
+    #expect(!navigation.canPresent)
+    #expect(navigation.present(.details(1)) == nil)
+    #expect(navigation.presentations.isEmpty)
+}
+
+@MainActor
+@Test
+func initialPresentationsUseTheConfiguredDepthLimit() {
+    let presentation = NavigationPresentation<TestPage>(
+        destination: .details(1),
+        style: .sheet
+    )
+    let navigation = NavigationController(
+        roots: [NavigationRoot(destination: TestPage.home)],
+        presentations: [presentation],
+        configuration: NavigationControllerConfiguration(
+            maximumPresentationDepth: 1
+        )
+    )
+
+    #expect(navigation.presentations.map(\.id) == [presentation.id])
+    #expect(!navigation.canPresent)
+    #expect(navigation.present(.details(2)) == nil)
 }
 
 @MainActor
@@ -261,11 +371,13 @@ func readingSurfacePlacementDoesNotChangeControllerState() {
 
 @MainActor
 @Test
-func presentingTheSameDestinationCreatesDistinctStackOccurrences() {
+func presentingTheSameDestinationCreatesDistinctStackOccurrences() throws {
     let navigation = makeController()
 
-    let first = navigation.present(.details(1), as: .sheet)
-    let second = navigation.present(.details(1), as: .fullScreen)
+    let first = try #require(navigation.present(.details(1), as: .sheet))
+    let second = try #require(
+        navigation.present(.details(1), as: .fullScreen)
+    )
 
     #expect(first.id != second.id)
     #expect(navigation.presentations.map(\.destination) == [
@@ -277,13 +389,15 @@ func presentingTheSameDestinationCreatesDistinctStackOccurrences() {
 
 @MainActor
 @Test
-func presentationPathsAreIndependentFromRootsAndOtherPresentations() {
+func presentationPathsAreIndependentFromRootsAndOtherPresentations() throws {
     let navigation = makeController()
-    let first = navigation.present(
-        .details(1),
-        path: [.details(5)]
+    let first = try #require(
+        navigation.present(
+            .details(1),
+            path: [.details(5)]
+        )
     )
-    let second = navigation.present(.details(2))
+    let second = try #require(navigation.present(.details(2)))
 
     navigation.navigate(to: .details(10), in: first.id)
     navigation.navigate(to: .details(20), in: second.id)
@@ -299,9 +413,9 @@ func presentationPathsAreIndependentFromRootsAndOtherPresentations() {
 
 @MainActor
 @Test
-func navigatingInsideAPresentationUsesFirstMatchReuseBehavior() {
+func navigatingInsideAPresentationUsesFirstMatchReuseBehavior() throws {
     let navigation = makeController()
-    let presentation = navigation.present(.details(1))
+    let presentation = try #require(navigation.present(.details(1)))
     navigation[presentation: presentation.id] = [
         .details(10),
         .details(20),
@@ -321,7 +435,8 @@ func navigatingInsideAPresentationUsesFirstMatchReuseBehavior() {
 func missingPresentationPathOperationsAreNoOps() {
     let navigation = makeController()
     let missingID = NavigationPresentation<TestPage>(
-        destination: .details(99)
+        destination: .details(99),
+        style: .sheet
     ).id
 
     navigation.navigate(to: .details(1), in: missingID)
@@ -334,10 +449,10 @@ func missingPresentationPathOperationsAreNoOps() {
 
 @MainActor
 @Test
-func dismissPresentationRemovesOnlyTheTopLayer() {
+func dismissPresentationRemovesOnlyTheTopLayer() throws {
     let navigation = makeController()
-    let first = navigation.present(.details(1))
-    let second = navigation.present(.details(2))
+    let first = try #require(navigation.present(.details(1)))
+    let second = try #require(navigation.present(.details(2)))
 
     navigation.dismissPresentation()
 
@@ -347,13 +462,15 @@ func dismissPresentationRemovesOnlyTheTopLayer() {
 
 @MainActor
 @Test
-func dismissingAPresentationRemovesItsDescendantsTopFirst() {
+func dismissingAPresentationRemovesItsDescendantsTopFirst() throws {
     let navigation = makeController()
     var dismissalOrder: [Int] = []
 
-    let first = navigation.present(.details(1)) {
-        dismissalOrder.append(1)
-    }
+    let first = try #require(
+        navigation.present(.details(1)) {
+            dismissalOrder.append(1)
+        }
+    )
     navigation.present(.details(2)) {
         dismissalOrder.append(2)
     }
@@ -426,15 +543,31 @@ func dismissalCallbacksCanPresentAReplacementWithoutLosingIt() {
 @Test
 func configuredPresentationIDsMustBeUnique() {
     let identifier = NavigationPresentation<TestPage>(
-        destination: .details(1)
+        destination: .details(1),
+        style: .sheet
     ).id
     let uniquePresentations = [
-        NavigationPresentation(id: identifier, destination: TestPage.details(1)),
-        NavigationPresentation(destination: TestPage.details(1)),
+        NavigationPresentation(
+            id: identifier,
+            destination: TestPage.details(1),
+            style: .sheet
+        ),
+        NavigationPresentation(
+            destination: TestPage.details(1),
+            style: .sheet
+        ),
     ]
     let duplicatePresentations = [
-        NavigationPresentation(id: identifier, destination: TestPage.details(1)),
-        NavigationPresentation(id: identifier, destination: TestPage.details(2)),
+        NavigationPresentation(
+            id: identifier,
+            destination: TestPage.details(1),
+            style: .sheet
+        ),
+        NavigationPresentation(
+            id: identifier,
+            destination: TestPage.details(2),
+            style: .sheet
+        ),
     ]
 
     #expect(

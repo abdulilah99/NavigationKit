@@ -52,6 +52,10 @@ func makeExampleNavigationController() -> NavigationController<Page> {
                 )
             ),
         ],
-        selectedRoot: .home
+        selectedRoot: .home,
+        configuration: NavigationControllerConfiguration(
+            defaultPresentationStyle: .sheet,
+            maximumPresentationDepth: 8
+        )
     )
 }

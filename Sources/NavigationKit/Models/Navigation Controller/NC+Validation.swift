@@ -7,7 +7,8 @@ extension NavigationController {
     static func validateConfiguration(
         roots: [NavigationRoot<Destination>],
         selectedRoot: Destination?,
-        presentations: [NavigationPresentation<Destination>]
+        presentations: [NavigationPresentation<Destination>],
+        configuration: NavigationControllerConfiguration
     ) -> Destination {
         precondition(
             !roots.isEmpty,
@@ -26,6 +27,10 @@ extension NavigationController {
         precondition(
             hasUniquePresentationIDs(presentations),
             "NavigationController requires every presentation ID to be unique."
+        )
+        precondition(
+            presentations.count <= configuration.maximumPresentationDepth,
+            "Initial presentations exceed the configured maximum depth."
         )
 
         return initialSelection
