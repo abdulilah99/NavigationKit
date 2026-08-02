@@ -1,6 +1,6 @@
 //
 //  NC+Views.swift
-//  Serotonin
+//  NavigationKit
 //
 //  Created by Abdulilah on 03/03/2025.
 //
@@ -42,6 +42,6 @@ public extension NavigationController {
     /// Build custom navigation chrome directly from the controller's roots,
     /// selection, and navigation operations instead.
     func makeView() -> some View {
-        view
+        view.navigationPresentations(self)
     }
 }

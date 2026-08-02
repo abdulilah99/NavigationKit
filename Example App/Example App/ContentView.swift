@@ -21,6 +21,7 @@ struct ContentView: View {
                 navigation.makeView()
             case .custom:
                 CustomNavigationHost(navigation: navigation)
+                    .navigationPresentations(navigation)
             }
         }
     }

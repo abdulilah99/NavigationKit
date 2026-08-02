@@ -7,7 +7,7 @@ It provides two ways to use the same navigation state:
 - Call `controller.makeView()` for NavigationKit's native platform-adaptive host.
 - Build your own tab bar, sidebar, or other navigation chrome using the controller's roots, selection, and commands.
 
-Tabs and pushed routes use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, and still be pushed inside any root's stack.
+Tabs, pushed routes, sheets, and full-screen presentations use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, be pushed inside a stack, or occur multiple times in a modal stack.
 
 ## Platform support
 
@@ -51,13 +51,14 @@ import NavigationKit
 
 ## Core model
 
-NavigationKit uses three core types:
+NavigationKit uses four core types:
 
 - `Navigable` describes every destination in the application.
 - `NavigationRoot` gives a configured top-level destination an independent path and presentation policy.
-- `NavigationController` owns the fixed root catalog, selected root, and navigation commands.
+- `NavigationPresentation` represents one stable occurrence in the modal stack and owns an independent route path.
+- `NavigationController` owns the fixed root catalog, selected root, modal stack, and navigation commands.
 
-“Tab” and “route” are presentation terms rather than separate destination types.
+“Tab,” “route,” “sheet,” and “full screen” are presentation terms rather than separate destination types.
 
 ## Quick start
 
@@ -228,6 +229,89 @@ navigation[.library] = [
 
 Reading an unconfigured root returns an empty path. Writing one is ignored. Dedicated push, pop, replace, and reset commands are planned for the evolving 0.2 API.
 
+## Modal presentation stacks
+
+Modal presentation is part of `NavigationController`; there is no separate modal destination type or controller.
+
+### Present destinations
+
+```swift
+navigation.present(.settings, as: .sheet)
+navigation.present(.article(id: 42), as: .fullScreen)
+```
+
+`present` always appends a new occurrence and returns it:
+
+```swift
+let presentation = navigation.present(.article(id: 42))
+```
+
+Occurrence identity is separate from destination identity. Presenting `.article(id: 42)` twice produces two distinct stack entries, which is useful for recursive workflows and repeated detail contexts.
+
+Every presentation owns an independent typed route path. Navigate within one presentation using its stable ID:
+
+```swift
+navigation.navigate(
+    to: .article(id: 43),
+    in: presentation.id
+)
+
+navigation[presentation: presentation.id] = [
+    .article(id: 44),
+    .article(id: 45),
+]
+```
+
+The root paths underneath the modal stack are unaffected.
+
+### Build nested stacks
+
+Presenting while another destination is presented creates a native child presentation:
+
+```swift
+navigation.present(.article(id: 42), as: .sheet)
+navigation.present(.settings, as: .sheet)
+navigation.present(.article(id: 43), as: .fullScreen)
+```
+
+NavigationKit hosts these as a real presenting hierarchy: application content presents the article, the article presents the filters, and the filters present the player. It does not use timing delays to simulate a stack.
+
+### Dismiss presentations
+
+```swift
+navigation.dismissPresentation()
+navigation.dismissPresentations(count: 2)
+navigation.dismissAllPresentations()
+navigation.dismissPresentation(id: presentation.id)
+```
+
+`dismissPresentation(id:)` removes the identified presentation and every presentation above it. A native child cannot outlive the presentation that owns it. Dismissal callbacks run exactly once in top-to-bottom order:
+
+```swift
+navigation.present(.settings, as: .sheet) {
+    // Runs when this occurrence leaves the controller's stack.
+}
+```
+
+The public `presentations` array is read-only from outside the controller and can be inspected to render debugging or custom state UI.
+
+### Platform behavior
+
+- `.sheet` uses native sheets everywhere.
+- `.fullScreen` uses native full-screen covers on iOS and tvOS.
+- macOS and visionOS do not expose SwiftUI full-screen covers, so `.fullScreen` deterministically falls back to a native sheet there.
+- Remote Back/Menu and interactive sheet dismissal update the same controller stack.
+
+### Migrating from ModalKit
+
+NavigationKit 0.2 removes the separate `ModalKit` product and its `Modal` and `ModalController` protocols.
+
+- Add only the `NavigationKit` product and remove `import ModalKit`.
+- Add modal-only cases to the same type that conforms to `Navigable`.
+- Replace `present(sheet:)` with `navigation.present(_:as:path:onDismiss:)`.
+- Replace mutation of a `sheets` array with the explicit dismissal commands.
+- Remove `.sheets(items:)`. `makeView()` hosts presentations automatically; custom hosts apply `.navigationPresentations(navigation)` once.
+
 ## Typed NavigationLink convenience
 
 NavigationKit provides a label convenience for navigable values:
@@ -330,11 +414,12 @@ struct CustomNavigationHost: View {
                 }
             }
         }
+        .navigationPresentations(navigation)
     }
 }
 ```
 
-Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly.
+Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(navigation)` exactly once around a custom host. `makeView()` installs it automatically.
 
 ## Root roles
 
@@ -357,6 +442,7 @@ NavigationKit treats tvOS as a primary platform:
 - tvOS 17 uses the native `TabView` fallback.
 - Each root retains its own `NavigationStack` path.
 - Standard stack navigation lets the remote's Back/Menu behavior remain native.
+- Nested sheets and full-screen covers use native presentation and dismissal behavior.
 - Custom chrome should use native focusable controls such as `Button` and `NavigationLink`, not tap gestures.
 - Keep focus state inside views rather than shared navigation state.
 
@@ -397,6 +483,10 @@ The example demonstrates:
 - A destination used as both a root and a pushed route.
 - Programmatic navigation on the current and another root.
 - Independent retained paths.
+- Nested sheet and full-screen presentation stacks.
+- Repeated modal occurrences of the same destination.
+- Independent route paths inside modal presentations.
+- Top, counted, cascading, and complete modal dismissal.
 - Platform-specific surface policy.
 - A programmatically selectable root hidden from compact modern chrome.
 - A native search-role root.
@@ -409,6 +499,7 @@ NavigationKit currently focuses on:
 - A homogeneous, typed `[Destination]` path.
 - A fixed root catalog.
 - Independent paths for every root.
+- First-class modal stacks with independent paths for every presentation.
 - Explicit selection and navigation.
 - Native modern and legacy hosts.
 - Custom-chrome access to the same state and commands.
@@ -422,11 +513,13 @@ Not yet included in the finalized API:
 - Dedicated push, pop, replace, and reset commands.
 - Persisted tab customization.
 
-The package also exports `ModalKit`, which is undergoing a presentation-state redesign. It is not used by the primary example and should be considered experimental until its dismissal, stacking, and full-screen behavior are finalized and tested.
-
 ## Design guarantees
 
-- Tabs and routes share one destination identity.
+- Tabs, routes, sheets, and full-screen presentations share one destination type.
+- Modal occurrences have stable identity independent from destination identity.
+- Repeated destination values are valid in a modal stack.
+- Removing a presentation removes every presentation above it.
+- Dismissal callbacks run exactly once from the top layer downward.
 - Surface placement never changes command behavior.
 - Switching roots preserves every root's path.
 - Hidden roots remain programmatically selectable.
@@ -442,4 +535,4 @@ Run the package tests with:
 swift test
 ```
 
-The test suite covers path reuse, hash collisions, cross-root navigation, missing-root no-ops, fixed catalog validation, independent paths, and surface policies.
+The test suite covers path reuse, hash collisions, cross-root navigation, missing-root no-ops, fixed catalog validation, independent paths, surface policies, repeated modal occurrences, modal paths, cascading dismissal, callbacks, and reentrant presentation.

@@ -10,11 +10,9 @@ let package = Package(
     ],
     products: [
         .library(name: "NavigationKit", targets: ["NavigationKit"]),
-        .library(name: "ModalKit", targets: ["ModalKit"]),
     ],
     targets: [
         .target(name: "NavigationKit", path: "Sources/NavigationKit"),
-        .target(name: "ModalKit", path: "Sources/ModalKit"),
         .testTarget(name: "NavigationKitTests", dependencies: ["NavigationKit"]),
     ]
 )

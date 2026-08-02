@@ -14,6 +14,8 @@ enum Page: Navigable {
     case search
     case settings
     case article(Int)
+    case filters
+    case player(Int)
 
     var id: Self { self }
 
@@ -29,6 +31,10 @@ enum Page: Navigable {
             "Settings"
         case .article(let id):
             "Article \(id)"
+        case .filters:
+            "Filters"
+        case .player(let id):
+            "Player \(id)"
         }
     }
 
@@ -44,6 +50,10 @@ enum Page: Navigable {
             Image(systemName: "gear")
         case .article:
             Image(systemName: "doc.text")
+        case .filters:
+            Image(systemName: "line.3.horizontal.decrease.circle")
+        case .player:
+            Image(systemName: "play.rectangle")
         }
     }
 
@@ -60,6 +70,10 @@ enum Page: Navigable {
             SettingsView()
         case .article(let id):
             ArticleView(id: id)
+        case .filters:
+            FiltersView()
+        case .player(let id):
+            PlayerView(id: id)
         }
     }
 
@@ -98,7 +112,24 @@ private struct HomeView: View {
                 }
             }
 
+            Section("Modal presentation stacks") {
+                Button("Present Article 10 as a sheet") {
+                    navigation.present(.article(10), as: .sheet)
+                }
+
+                Button("Present Player 1 full screen") {
+                    navigation.present(.player(1), as: .fullScreen)
+                }
+
+                Button("Build a three-layer mixed stack") {
+                    navigation.present(.article(20), as: .sheet)
+                    navigation.present(.filters, as: .sheet)
+                    navigation.present(.player(2), as: .fullScreen)
+                }
+            }
+
             NavigationStateSection(navigation: navigation)
+            PresentationStateSection(navigation: navigation)
         }
         .navigationTitle("Home")
     }
@@ -179,8 +210,153 @@ private struct ArticleView: View {
                     navigation.select(root: .settings)
                 }
             }
+
+            Section("Modal stacking") {
+                Button("Present Article \(id + 1) as a sheet") {
+                    navigation.present(.article(id + 1), as: .sheet)
+                }
+
+                Button("Present this article again") {
+                    navigation.present(.article(id), as: .sheet)
+                }
+
+                Button("Present Player \(id) full screen") {
+                    navigation.present(.player(id), as: .fullScreen)
+                }
+
+                if let presentation = navigation.presentations.last {
+                    Button("Push Article \(id + 1) inside this modal") {
+                        navigation.navigate(
+                            to: .article(id + 1),
+                            in: presentation.id
+                        )
+                    }
+                }
+            }
+
+            PresentationControlsSection(navigation: navigation)
+            PresentationStateSection(navigation: navigation)
         }
         .navigationTitle("Article \(id)")
+    }
+}
+
+private struct FiltersView: View {
+    @Environment(NavigationController<Page>.self) private var navigation
+    @State private var includesReadArticles = true
+    @State private var newestFirst = true
+
+    var body: some View {
+        List {
+            Section("Example filters") {
+                Toggle("Include read articles", isOn: $includesReadArticles)
+                Toggle("Newest first", isOn: $newestFirst)
+            }
+
+            Section("Continue the modal stack") {
+                Button("Present Article 30") {
+                    navigation.present(.article(30), as: .sheet)
+                }
+
+                Button("Present Player 3 full screen") {
+                    navigation.present(.player(3), as: .fullScreen)
+                }
+            }
+
+            PresentationControlsSection(navigation: navigation)
+            PresentationStateSection(navigation: navigation)
+        }
+        .navigationTitle("Filters")
+    }
+}
+
+private struct PlayerView: View {
+    let id: Int
+
+    @Environment(NavigationController<Page>.self) private var navigation
+
+    var body: some View {
+        List {
+            Section("Full-screen destination") {
+                Label("Playing item \(id)", systemImage: "play.fill")
+                Text("Full-screen presentations remain normal navigable destinations and can present another layer.")
+            }
+
+            Section("Continue the modal stack") {
+                Button("Present player details") {
+                    navigation.present(.article(id), as: .sheet)
+                }
+
+                Button("Present another Player \(id)") {
+                    navigation.present(.player(id), as: .fullScreen)
+                }
+            }
+
+            PresentationControlsSection(navigation: navigation)
+            PresentationStateSection(navigation: navigation)
+        }
+        .navigationTitle("Player \(id)")
+    }
+}
+
+private struct PresentationControlsSection: View {
+    let navigation: NavigationController<Page>
+
+    var body: some View {
+        Section("Dismiss presentations") {
+            Button("Dismiss top presentation") {
+                navigation.dismissPresentation()
+            }
+
+            Button("Dismiss top two presentations") {
+                navigation.dismissPresentations(count: 2)
+            }
+
+            Button("Dismiss all presentations", role: .destructive) {
+                navigation.dismissAllPresentations()
+            }
+        }
+    }
+}
+
+private struct PresentationStateSection: View {
+    let navigation: NavigationController<Page>
+
+    var body: some View {
+        Section("Presentation stack") {
+            if navigation.presentations.isEmpty {
+                Text("No modal presentations")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(navigation.presentations) { presentation in
+                    HStack {
+                        Label(
+                            title: { Text(presentation.destination.titleKey) },
+                            icon: { presentation.destination.image }
+                        )
+
+                        Spacer()
+
+                        VStack(alignment: .trailing) {
+                            Text(presentation.style.titleKey)
+                            Text("\(presentation.path.count) pushed")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private extension NavigationPresentationStyle {
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .sheet:
+            "Sheet"
+        case .fullScreen:
+            "Full screen"
+        }
     }
 }
 

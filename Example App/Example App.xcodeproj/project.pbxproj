@@ -13,7 +13,6 @@
 		43127EF22D8F650B0041111D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43127EEA2D8F650B0041111D /* Assets.xcassets */; };
 		43127EF42D8F655D0041111D /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127EF32D8F655D0041111D /* NavigationController.swift */; };
 		43127EFF2D8F669B0041111D /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43127EFE2D8F669B0041111D /* Page.swift */; };
-		4337DEFE301E6CC7006BA817 /* ModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4337DEFD301E6CC7006BA817 /* ModalKit */; };
 		4337DF00301E6CC7006BA817 /* NavigationKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4337DEFF301E6CC7006BA817 /* NavigationKit */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +32,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4337DEFE301E6CC7006BA817 /* ModalKit in Frameworks */,
 				4337DF00301E6CC7006BA817 /* NavigationKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -104,7 +102,6 @@
 			);
 			name = "Example App";
 			packageProductDependencies = (
-				4337DEFD301E6CC7006BA817 /* ModalKit */,
 				4337DEFF301E6CC7006BA817 /* NavigationKit */,
 			);
 			productName = "Example App";
@@ -402,10 +399,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4337DEFD301E6CC7006BA817 /* ModalKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ModalKit;
-		};
 		4337DEFF301E6CC7006BA817 /* NavigationKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = NavigationKit;
