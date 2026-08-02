@@ -20,11 +20,11 @@ private enum TestPage: Navigable {
         }
     }
 
-    var image: Image {
+    var icon: Image {
         Image(systemName: "circle")
     }
 
-    var destination: some View {
+    var content: some View {
         Color.clear
     }
 
@@ -38,7 +38,7 @@ private enum TestPage: Navigable {
 @MainActor
 private func makeController(
     selectedRoot: TestPage = .home,
-    configuration: NavigationControllerConfiguration = .default,
+    configuration: NavigationConfiguration = .default,
     roots: [NavigationRoot<TestPage>] = [
         NavigationRoot(destination: .home),
         NavigationRoot(destination: .library),
@@ -68,7 +68,9 @@ func navigateAppendsUnequalDestinationsEvenWhenHashesCollide() {
 @Test
 func navigatingToAnExistingDestinationTrimsEverythingAfterIt() {
     let router = makeController()
-    router[.home] = [.details(1), .details(2), .details(3)]
+    router.replacePath(
+        with: [.details(1), .details(2), .details(3)]
+    )
 
     router.navigate(to: .details(2))
 
@@ -89,10 +91,71 @@ func navigateOnAnotherRootMutatesAndSelectsThatRoot() {
 
 @MainActor
 @Test
+func navigateBackClampsToThePathAndIgnoresInvalidCounts() {
+    let navigation = makeController()
+    navigation.replacePath(
+        with: [.details(1), .details(2), .details(3)]
+    )
+
+    navigation.navigateBack(2)
+    #expect(navigation[.home] == [.details(1)])
+
+    navigation.navigateBack(10)
+    #expect(navigation[.home].isEmpty)
+
+    navigation.navigateBack(0)
+    navigation.navigateBack(-1)
+    #expect(navigation[.home].isEmpty)
+}
+
+@MainActor
+@Test
+func rootPathCommandsOperateOnAndSelectTheSpecifiedRoot() {
+    let navigation = makeController()
+
+    navigation.replacePath(
+        with: [.details(1), .details(1), .details(2)],
+        on: .library
+    )
+
+    #expect(navigation.selectedRoot == .library)
+    #expect(navigation[.library] == [
+        .details(1),
+        .details(1),
+        .details(2),
+    ])
+
+    navigation.navigateBack(on: .library)
+    #expect(navigation[.library] == [.details(1), .details(1)])
+
+    navigation.returnToRoot(on: .library)
+    #expect(navigation[.library].isEmpty)
+    #expect(navigation[.home].isEmpty)
+}
+
+@MainActor
+@Test
+func rootPathCommandsIgnoreUnconfiguredRoots() {
+    let navigation = makeController()
+    navigation.replacePath(with: [.details(1)])
+
+    navigation.navigateBack(on: .details(99))
+    navigation.returnToRoot(on: .details(99))
+    navigation.replacePath(
+        with: [.details(2)],
+        on: .details(99)
+    )
+    #expect(navigation.selectedRoot == .home)
+    #expect(navigation[.home] == [.details(1)])
+    #expect(navigation[.details(99)].isEmpty)
+}
+
+@MainActor
+@Test
 func selectingRootPreservesEveryRootPath() {
     let router = makeController()
-    router[.home] = [.library, .details(1)]
-    router[.library] = [.details(2)]
+    router.replacePath(with: [.library, .details(1)])
+    router.replacePath(with: [.details(2)], on: .library)
 
     router.select(root: .library)
     router.select(root: .home)
@@ -127,7 +190,7 @@ func navigationControllerDefaultsToItsFirstRoot() {
 
 @Test
 func navigationConfigurationHasSafePresentationDefaults() {
-    let configuration = NavigationControllerConfiguration.default
+    let configuration = NavigationConfiguration.default
 
     #expect(configuration.defaultPresentationStyle == .sheet)
     #expect(configuration.maximumPresentationDepth == 8)
@@ -143,7 +206,7 @@ func controllerConfigurationIsEditableAndControlsFuturePresentations() throws {
     let presentation = try #require(navigation.present(.details(1)))
 
     #expect(presentation.style == .fullScreen)
-    #expect(!navigation.canPresent)
+    #expect(!navigation.hasPresentationCapacity)
 
     var rejectedDismissalRan = false
     let rejectedPresentation = navigation.present(.details(2)) {
@@ -156,7 +219,7 @@ func controllerConfigurationIsEditableAndControlsFuturePresentations() throws {
     navigation.dismissPresentation()
 
     #expect(!rejectedDismissalRan)
-    #expect(navigation.canPresent)
+    #expect(navigation.hasPresentationCapacity)
     #expect(navigation.present(.details(2))?.style == .fullScreen)
 }
 
@@ -164,7 +227,7 @@ func controllerConfigurationIsEditableAndControlsFuturePresentations() throws {
 @Test
 func explicitPresentationStyleOverridesTheConfiguredDefault() throws {
     let navigation = makeController(
-        configuration: NavigationControllerConfiguration(
+        configuration: NavigationConfiguration(
             defaultPresentationStyle: .fullScreen
         )
     )
@@ -189,23 +252,23 @@ func loweringPresentationDepthDoesNotRewriteExistingState() {
         .details(1),
         .details(2),
     ])
-    #expect(!navigation.canPresent)
+    #expect(!navigation.hasPresentationCapacity)
 
     navigation.dismissPresentations(count: 2)
 
-    #expect(navigation.canPresent)
+    #expect(navigation.hasPresentationCapacity)
 }
 
 @MainActor
 @Test
 func zeroPresentationDepthDisablesPresentation() {
     let navigation = makeController(
-        configuration: NavigationControllerConfiguration(
+        configuration: NavigationConfiguration(
             maximumPresentationDepth: 0
         )
     )
 
-    #expect(!navigation.canPresent)
+    #expect(!navigation.hasPresentationCapacity)
     #expect(navigation.present(.details(1)) == nil)
     #expect(navigation.presentations.isEmpty)
 }
@@ -220,13 +283,13 @@ func initialPresentationsUseTheConfiguredDepthLimit() {
     let navigation = NavigationController(
         roots: [NavigationRoot(destination: TestPage.home)],
         presentations: [presentation],
-        configuration: NavigationControllerConfiguration(
+        configuration: NavigationConfiguration(
             maximumPresentationDepth: 1
         )
     )
 
     #expect(navigation.presentations.map(\.id) == [presentation.id])
-    #expect(!navigation.canPresent)
+    #expect(!navigation.hasPresentationCapacity)
     #expect(navigation.present(.details(2)) == nil)
 }
 
@@ -277,7 +340,7 @@ func aUniformSurfacePolicyAppliesToEveryContext() {
     let policy = NavigationSurfacePolicy(.sidebar)
 
     #expect(policy.surfaces(in: .compact) == .sidebar)
-    #expect(policy.surfaces(in: .expanded) == .sidebar)
+    #expect(policy.surfaces(in: .regular) == .sidebar)
     #expect(policy.surfaces(in: .television) == .sidebar)
     #expect(policy.surfaces(in: .desktop) == .sidebar)
     #expect(policy.surfaces(in: .spatial) == .sidebar)
@@ -287,14 +350,14 @@ func aUniformSurfacePolicyAppliesToEveryContext() {
 func aSurfacePolicyCanPlaceTheSameRootDifferentlyByContext() {
     let policy = NavigationSurfacePolicy(
         compact: .tabBar,
-        expanded: .sidebar,
+        regular: .sidebar,
         television: .sidebar,
         desktop: .all,
         spatial: []
     )
 
     #expect(policy.surfaces(in: .compact) == .tabBar)
-    #expect(policy.surfaces(in: .expanded) == .sidebar)
+    #expect(policy.surfaces(in: .regular) == .sidebar)
     #expect(policy.surfaces(in: .television) == .sidebar)
     #expect(policy.surfaces(in: .desktop) == .all)
     #expect(policy.surfaces(in: .spatial).isEmpty)
@@ -305,8 +368,9 @@ func aSurfacePolicyCanPlaceTheSameRootDifferentlyByContext() {
 func navigationRootDefaultsToAllSurfaces() {
     let root = NavigationRoot(destination: TestPage.home)
 
+    #expect(root.role == nil)
     #expect(root.surfaces(in: .compact) == .all)
-    #expect(root.surfaces(in: .expanded) == .all)
+    #expect(root.surfaces(in: .regular) == .all)
     #expect(root.surfaces(in: .television) == .all)
     #expect(root.surfaces(in: .desktop) == .all)
     #expect(root.surfaces(in: .spatial) == .all)
@@ -314,10 +378,21 @@ func navigationRootDefaultsToAllSurfaces() {
 
 @MainActor
 @Test
+func rootRoleBelongsToTheConfiguredRoot() {
+    let root = NavigationRoot(
+        destination: TestPage.home,
+        role: .search
+    )
+
+    #expect(root.role == .search)
+}
+
+@MainActor
+@Test
 func rootSurfacePolicyControlsPlacement() {
     let policy = NavigationSurfacePolicy(
         compact: .sidebar,
-        expanded: .tabBar,
+        regular: .tabBar,
         television: .all,
         desktop: [],
         spatial: .sidebar
@@ -328,7 +403,7 @@ func rootSurfacePolicyControlsPlacement() {
     )
 
     #expect(root.surfaces(in: .compact) == .sidebar)
-    #expect(root.surfaces(in: .expanded) == .tabBar)
+    #expect(root.surfaces(in: .regular) == .tabBar)
     #expect(root.surfaces(in: .television) == .all)
     #expect(root.surfaces(in: .desktop).isEmpty)
     #expect(root.surfaces(in: .spatial) == .sidebar)
@@ -339,7 +414,7 @@ func rootSurfacePolicyControlsPlacement() {
 func readingSurfacePlacementDoesNotChangeControllerState() {
     let policy = NavigationSurfacePolicy(
         compact: .tabBar,
-        expanded: .sidebar,
+        regular: .sidebar,
         television: [],
         desktop: .all,
         spatial: .sidebar
@@ -355,8 +430,8 @@ func readingSurfacePlacementDoesNotChangeControllerState() {
     ])
 
     for context in [
-        NavigationPresentationContext.compact,
-        .expanded,
+        NavigationSurfaceContext.compact,
+        .regular,
         .television,
         .desktop,
         .spatial,
@@ -416,11 +491,10 @@ func presentationPathsAreIndependentFromRootsAndOtherPresentations() throws {
 func navigatingInsideAPresentationUsesFirstMatchReuseBehavior() throws {
     let navigation = makeController()
     let presentation = try #require(navigation.present(.details(1)))
-    navigation[presentation: presentation.id] = [
-        .details(10),
-        .details(20),
-        .details(30),
-    ]
+    navigation.replacePath(
+        with: [.details(10), .details(20), .details(30)],
+        in: presentation.id
+    )
 
     navigation.navigate(to: .details(20), in: presentation.id)
 
@@ -428,6 +502,29 @@ func navigatingInsideAPresentationUsesFirstMatchReuseBehavior() throws {
         .details(10),
         .details(20),
     ])
+}
+
+@MainActor
+@Test
+func presentationPathCommandsPreserveOccurrenceAndRootState() throws {
+    let navigation = makeController()
+    navigation.replacePath(with: [.details(90)])
+    let presentation = try #require(navigation.present(.details(1)))
+
+    navigation.replacePath(
+        with: [.details(10), .details(10), .details(20)],
+        in: presentation.id
+    )
+    navigation.navigateBack(2, in: presentation.id)
+
+    #expect(navigation[presentation: presentation.id] == [.details(10)])
+    #expect(navigation.presentations.map(\.id) == [presentation.id])
+    #expect(navigation[.home] == [.details(90)])
+
+    navigation.returnToRoot(in: presentation.id)
+
+    #expect(navigation[presentation: presentation.id].isEmpty)
+    #expect(navigation.presentations.map(\.id) == [presentation.id])
 }
 
 @MainActor
@@ -440,7 +537,9 @@ func missingPresentationPathOperationsAreNoOps() {
     ).id
 
     navigation.navigate(to: .details(1), in: missingID)
-    navigation[presentation: missingID] = [.details(2)]
+    navigation.navigateBack(in: missingID)
+    navigation.returnToRoot(in: missingID)
+    navigation.replacePath(with: [.details(2)], in: missingID)
 
     #expect(navigation[presentation: missingID].isEmpty)
     #expect(navigation.presentations.isEmpty)

@@ -7,9 +7,9 @@
 ///
 /// Applications can use these values to describe placement without depending
 /// on SwiftUI size classes or platform checks.
-public enum NavigationPresentationContext: Hashable, Sendable {
+public enum NavigationSurfaceContext: Hashable, Sendable {
     case compact
-    case expanded
+    case regular
     case television
     case desktop
     case spatial
@@ -35,7 +35,7 @@ public struct NavigationSurfaces: OptionSet, Hashable, Sendable {
 /// App-owned placement data for a configured navigation root.
 public struct NavigationSurfacePolicy: Hashable, Sendable {
     public let compact: NavigationSurfaces
-    public let expanded: NavigationSurfaces
+    public let regular: NavigationSurfaces
     public let television: NavigationSurfaces
     public let desktop: NavigationSurfaces
     public let spatial: NavigationSurfaces
@@ -44,7 +44,7 @@ public struct NavigationSurfacePolicy: Hashable, Sendable {
     public init(_ surfaces: NavigationSurfaces) {
         self.init(
             compact: surfaces,
-            expanded: surfaces,
+            regular: surfaces,
             television: surfaces,
             desktop: surfaces,
             spatial: surfaces
@@ -53,26 +53,26 @@ public struct NavigationSurfacePolicy: Hashable, Sendable {
 
     public init(
         compact: NavigationSurfaces = .all,
-        expanded: NavigationSurfaces = .all,
+        regular: NavigationSurfaces = .all,
         television: NavigationSurfaces = .all,
         desktop: NavigationSurfaces = .all,
         spatial: NavigationSurfaces = .all
     ) {
         self.compact = compact
-        self.expanded = expanded
+        self.regular = regular
         self.television = television
         self.desktop = desktop
         self.spatial = spatial
     }
 
     public func surfaces(
-        in context: NavigationPresentationContext
+        in context: NavigationSurfaceContext
     ) -> NavigationSurfaces {
         switch context {
         case .compact:
             compact
-        case .expanded:
-            expanded
+        case .regular:
+            regular
         case .television:
             television
         case .desktop:

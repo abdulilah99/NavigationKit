@@ -8,7 +8,7 @@ extension NavigationController {
         roots: [NavigationRoot<Destination>],
         selectedRoot: Destination?,
         presentations: [NavigationPresentation<Destination>],
-        configuration: NavigationControllerConfiguration
+        configuration: NavigationConfiguration
     ) -> Destination {
         precondition(
             !roots.isEmpty,

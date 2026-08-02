@@ -11,10 +11,10 @@ public extension View {
     /// `NavigationController.makeView()` applies this automatically. Apply
     /// it once around a custom navigation host that does not use `makeView()`.
     func navigationPresentations<Destination: Navigable>(
-        _ navigation: NavigationController<Destination>
+        for navigation: NavigationController<Destination>
     ) -> some View {
         modifier(
-            NavigationPresentationLayer(
+            NavigationPresentationHostModifier(
                 navigation: navigation,
                 index: 0
             )

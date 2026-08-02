@@ -7,7 +7,7 @@ It provides two ways to use the same navigation state:
 - Call `controller.makeView()` for NavigationKit's native platform-adaptive host.
 - Build your own tab bar, sidebar, or other navigation chrome using the controller's roots, selection, and commands.
 
-Tabs, pushed routes, sheets, and full-screen presentations use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, be pushed inside a stack, or occur multiple times in a modal stack.
+Tabs, navigation-path destinations, sheets, and full-screen presentations use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, occur in a navigation path, or appear multiple times in a modal stack.
 
 ## Platform support
 
@@ -51,12 +51,13 @@ import NavigationKit
 
 ## Core model
 
-NavigationKit uses five core types:
+NavigationKit uses six core types:
 
 - `Navigable` describes every destination in the application.
 - `NavigationRoot` gives a configured top-level destination an independent path and presentation policy.
+- `NavigationSurfacePolicy` describes where a root appears without changing what the destination is.
 - `NavigationPresentation` represents one stable occurrence in the modal stack and owns an independent route path.
-- `NavigationControllerConfiguration` contains mutable controller-wide policies.
+- `NavigationConfiguration` contains mutable controller-wide policies.
 - `NavigationController` owns the fixed root catalog, selected root, modal stack, and navigation commands.
 
 “Tab,” “route,” “sheet,” and “full screen” are presentation terms rather than separate destination types.
@@ -88,7 +89,7 @@ enum Page: Navigable {
         }
     }
 
-    var image: Image {
+    var icon: Image {
         switch self {
         case .home: Image(systemName: "house")
         case .library: Image(systemName: "books.vertical")
@@ -98,7 +99,7 @@ enum Page: Navigable {
     }
 
     @ViewBuilder
-    var destination: some View {
+    var content: some View {
         switch self {
         case .home: HomeView()
         case .library: LibraryView()
@@ -110,6 +111,10 @@ enum Page: Navigable {
 ```
 
 Destination values must encode meaningful identity. For example, `.article(id: 42)` and `.article(id: 73)` are distinct locations and can coexist in a path.
+
+`titleKey` deliberately uses `LocalizedStringKey`: its value is a localizable
+key consumed by SwiftUI's `Text`, not an already-resolved display title.
+`icon` and `content` describe the destination's standard label image and view.
 
 ### 2. Create the roots and controller
 
@@ -124,11 +129,11 @@ func makeNavigationController() -> NavigationController<Page> {
             NavigationRoot(destination: .library),
             NavigationRoot(destination: .settings),
         ],
-        configuration: NavigationControllerConfiguration(
+        selectedRoot: .home,
+        configuration: NavigationConfiguration(
             defaultPresentationStyle: .sheet,
             maximumPresentationDepth: 8
-        ),
-        selectedRoot: .home
+        )
     )
 }
 ```
@@ -221,26 +226,56 @@ This updates the Library path and selects the Library root in one operation.
 - When a target root is provided, that root is selected after its path is updated.
 - If the target root is not configured, nothing changes.
 
+### Navigate back
+
+```swift
+navigation.navigateBack()
+navigation.navigateBack(2, on: .library)
+```
+
+The selected root is used when `on:` is omitted. The command removes up to the
+requested number of destinations, so asking to navigate back farther than the
+path depth safely returns to the root. A nonpositive count is a no-op.
+
+When `on:` is supplied, the configured root is selected after its path is
+updated. An unconfigured root is a no-op.
+
+### Return to a root destination
+
+```swift
+navigation.returnToRoot()
+navigation.returnToRoot(on: .library)
+```
+
+This empties the selected or specified root's navigation path. A specified root
+is also selected.
+
 ### Read or replace a root path
 
 ```swift
 let libraryPath = navigation[.library]
 
-navigation[.library] = [
-    .article(id: 10),
-    .article(id: 11),
-]
+navigation.replacePath(
+    with: [
+        .article(id: 10),
+        .article(id: 11),
+    ],
+    on: .library
+)
 ```
 
-Reading an unconfigured root returns an empty path. Writing one is ignored. Dedicated push, pop, replace, and reset commands are planned for the evolving 0.2 API.
+Paths are externally read-only and change through controller commands. This
+keeps custom chrome and NavigationKit's native host on the same validated
+mutation surface. Reading an unconfigured root returns an empty path;
+replacement is a no-op.
 
 ## Controller configuration
 
-`NavigationControllerConfiguration` contains policies that apply across the
+`NavigationConfiguration` contains policies that apply across the
 whole controller:
 
 ```swift
-let configuration = NavigationControllerConfiguration(
+let configuration = NavigationConfiguration(
     defaultPresentationStyle: .sheet,
     maximumPresentationDepth: 8
 )
@@ -290,9 +325,9 @@ guard let presentation = navigation.present(.article(id: 42)) else {
 }
 ```
 
-Use `navigation.canPresent` when presentation availability should be reflected
-in custom UI. Rejected presentations do not retain or invoke their dismissal
-callbacks.
+Use `navigation.hasPresentationCapacity` when presentation availability should
+be reflected in custom UI. Rejected presentations do not retain or invoke their
+dismissal callbacks.
 
 Occurrence identity is separate from destination identity. Presenting `.article(id: 42)` twice produces two distinct stack entries, which is useful for recursive workflows and repeated detail contexts.
 
@@ -304,13 +339,21 @@ navigation.navigate(
     in: presentation.id
 )
 
-navigation[presentation: presentation.id] = [
-    .article(id: 44),
-    .article(id: 45),
-]
+navigation.navigateBack(in: presentation.id)
+navigation.returnToRoot(in: presentation.id)
+
+navigation.replacePath(
+    with: [
+        .article(id: 44),
+        .article(id: 45),
+    ],
+    in: presentation.id
+)
 ```
 
-The root paths underneath the modal stack are unaffected.
+Presentation-path commands have the same safe semantics as their root
+counterparts. Missing presentation IDs are no-ops, and the root paths underneath
+the modal stack are unaffected.
 
 ### Build nested stacks
 
@@ -358,7 +401,7 @@ NavigationKit 0.2 removes the separate `ModalKit` product and its `Modal` and `M
 - Add modal-only cases to the same type that conforms to `Navigable`.
 - Replace `present(sheet:)` with `navigation.present(_:as:path:onDismiss:)`.
 - Replace mutation of a `sheets` array with the explicit dismissal commands.
-- Remove `.sheets(items:)`. `makeView()` hosts presentations automatically; custom hosts apply `.navigationPresentations(navigation)` once.
+- Remove `.sheets(items:)`. `makeView()` hosts presentations automatically; custom hosts apply `.navigationPresentations(for: navigation)` once.
 
 ## Typed NavigationLink convenience
 
@@ -368,15 +411,15 @@ NavigationKit provides a label convenience for navigable values:
 NavigationLink(value: Page.article(id: 42))
 ```
 
-It builds the link's label from the destination's `titleKey` and `image`. The root's `NavigationStack` registers the matching typed destination automatically.
+It builds the link's label from the destination's localizable `titleKey` and `icon`. The root's `NavigationStack` registers the matching typed destination automatically.
 
-The same configured root can also be pushed as a route:
+The same configured root can also occur in a navigation path:
 
 ```swift
 NavigationLink(value: Page.library)
 ```
 
-This pushes Library inside the current stack. It does not select the Library root.
+This navigates to Library inside the current stack. It does not select the Library root.
 
 ## Platform-specific root placement
 
@@ -387,7 +430,7 @@ let settingsRoot = NavigationRoot(
     destination: Page.settings,
     surfacePolicy: NavigationSurfacePolicy(
         compact: [],
-        expanded: .sidebar,
+        regular: .sidebar,
         television: .sidebar,
         desktop: .sidebar,
         spatial: .sidebar
@@ -398,11 +441,11 @@ let settingsRoot = NavigationRoot(
 Available semantic contexts:
 
 ```swift
-NavigationPresentationContext.compact
-NavigationPresentationContext.expanded
-NavigationPresentationContext.television
-NavigationPresentationContext.desktop
-NavigationPresentationContext.spatial
+NavigationSurfaceContext.compact
+NavigationSurfaceContext.regular
+NavigationSurfaceContext.television
+NavigationSurfaceContext.desktop
+NavigationSurfaceContext.spatial
 ```
 
 Available surfaces:
@@ -456,31 +499,31 @@ struct CustomNavigationHost: View {
                     } label: {
                         Label(
                             title: { Text(root.destination.titleKey) },
-                            icon: { root.destination.image }
+                            icon: { root.destination.icon }
                         )
                     }
                 }
             }
         }
-        .navigationPresentations(navigation)
+        .navigationPresentations(for: navigation)
     }
 }
 ```
 
-Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(navigation)` exactly once around a custom host. `makeView()` installs it automatically.
+Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(for: navigation)` exactly once around a custom host. `makeView()` installs it automatically.
 
 ## Root roles
 
-On modern OS releases, a destination may provide a native `TabRole` such as `.search`:
+Semantic roles belong to configured roots rather than every destination. For example, mark a search root when building the controller:
 
 ```swift
-@available(iOS 18, macOS 15, tvOS 18, visionOS 2, *)
-var role: TabRole? {
-    self == .search ? .search : nil
-}
+NavigationRoot(
+    destination: Page.search,
+    role: .search
+)
 ```
 
-Root-specific role metadata is expected to move from `Navigable` to root configuration before the 0.2 API is finalized.
+NavigationKit maps `NavigationRootRole.search` to SwiftUI's native search tab role on the modern host. The legacy host preserves the root and its navigation state but has no equivalent role API.
 
 ## tvOS guidance
 
@@ -528,8 +571,10 @@ The example demonstrates:
 - Native `makeView()` hosting.
 - Custom root chrome using the same controller.
 - Runtime switching between both hosts.
-- A destination used as both a root and a pushed route.
+- A destination used as both a root and a navigation-path destination.
 - Programmatic navigation on the current and another root.
+- Backward navigation, returning to a root, and exact path replacement.
+- The same navigation commands applied inside modal presentations.
 - Independent retained paths.
 - Nested sheet and full-screen presentation stacks.
 - Repeated modal occurrences of the same destination.
@@ -559,7 +604,6 @@ Not yet included in the finalized API:
 - Dynamic root insertion and removal.
 - Deep-link parsing and atomic navigation intents.
 - Codable restoration helpers.
-- Dedicated push, pop, replace, and reset commands.
 - Persisted tab customization.
 
 ## Design guarantees
@@ -572,6 +616,8 @@ Not yet included in the finalized API:
 - Dismissal callbacks run exactly once from the top layer downward.
 - Surface placement never changes command behavior.
 - Switching roots preserves every root's path.
+- Root and presentation paths are externally read-only and mutate through
+  controller commands.
 - Hidden roots remain programmatically selectable.
 - Missing roots never get inserted implicitly.
 - Navigation state is isolated to the main actor.
@@ -585,4 +631,8 @@ Run the package tests with:
 swift test
 ```
 
-The test suite covers path reuse, hash collisions, cross-root navigation, missing-root no-ops, fixed catalog validation, independent paths, surface policies, controller configuration, bounded modal growth, repeated modal occurrences, modal paths, cascading dismissal, callbacks, and reentrant presentation.
+The test suite covers path reuse, backward navigation, returning to roots, path
+replacement, hash collisions, cross-root navigation, missing-target no-ops,
+fixed catalog validation, independent paths, surface policies, controller
+configuration, bounded modal growth, repeated modal occurrences, modal paths,
+cascading dismissal, callbacks, and reentrant presentation.

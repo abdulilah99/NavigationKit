@@ -13,12 +13,13 @@ import Observation
 /// presentation also owns an independent typed route path.
 @Observable
 @MainActor
-public final class NavigationPresentation<Destination: Navigable>: Identifiable,
+public final class NavigationPresentation<Destination: Navigable>:
+    Identifiable,
     Equatable {
     public let id: UUID
     public let destination: Destination
     public let style: NavigationPresentationStyle
-    public var path: [Destination]
+    public internal(set) var path: [Destination]
 
     public init(
         id: UUID = UUID(),

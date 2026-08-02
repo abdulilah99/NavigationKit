@@ -1,6 +1,6 @@
 //
-//  TabNavigationView.swift
-//  Serotonin
+//  ModernNavigationHost.swift
+//  NavigationKit
 //
 //  Created by Abdulilah on 28/02/2025.
 //
@@ -8,25 +8,23 @@
 import SwiftUI
 
 @available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
-struct TabNavigationView<Destination: Navigable>: View {
+struct ModernNavigationHost<Destination: Navigable>: View {
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
-    
-    @Namespace private var namespace
-    
-    @Binding private var selection: Destination?
-    private var roots: [NavigationRoot<Destination>]
-    
+
+    @Binding private var selection: Destination
+    private let roots: [NavigationRoot<Destination>]
+
     init(
         roots: [NavigationRoot<Destination>],
-        selection: Binding<Destination?>
+        selection: Binding<Destination>
     ) {
         self.roots = roots
         self._selection = selection
     }
 
-    private var presentationContext: NavigationPresentationContext {
+    private var surfaceContext: NavigationSurfaceContext {
         #if os(tvOS)
         .television
         #elseif os(macOS)
@@ -34,23 +32,23 @@ struct TabNavigationView<Destination: Navigable>: View {
         #elseif os(visionOS)
         .spatial
         #else
-        horizontalSizeClass == .compact ? .compact : .expanded
+        horizontalSizeClass == .compact ? .compact : .regular
         #endif
     }
-    
-    public var body: some View {
+
+    var body: some View {
         TabView(selection: $selection) {
             ForEach(roots) { root in
-                let surfaces = root.surfaces(in: presentationContext)
+                let surfaces = root.surfaces(in: surfaceContext)
 
                 Tab(
                     value: root.destination,
-                    role: root.destination.role,
+                    role: root.role?.tabRole,
                     content: { root.content }
                 ) {
                     Label(
                         title: { Text(root.destination.titleKey) },
-                        icon: { root.destination.image }
+                        icon: { root.destination.icon }
                     )
                 }
                 .tabPlacement(surfaces.contains(.tabBar) ? .automatic : .sidebarOnly)
@@ -69,6 +67,15 @@ struct TabNavigationView<Destination: Navigable>: View {
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        .environment(\.serotoninNamespace, namespace)
+    }
+}
+
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
+private extension NavigationRootRole {
+    var tabRole: TabRole {
+        switch self {
+        case .search:
+            .search
+        }
     }
 }

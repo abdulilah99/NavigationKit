@@ -1,11 +1,11 @@
 //
-//  PresentedNavigationDestination.swift
+//  NavigationPresentationContent.swift
 //  NavigationKit
 //
 
 import SwiftUI
 
-struct PresentedNavigationDestination<Destination: Navigable>: View {
+struct NavigationPresentationContent<Destination: Navigable>: View {
     let navigation: NavigationController<Destination>
     let presentation: NavigationPresentation<Destination>
     let index: Int
@@ -15,7 +15,7 @@ struct PresentedNavigationDestination<Destination: Navigable>: View {
     var body: some View {
         presentation.content
             .modifier(
-                NavigationPresentationLayer(
+                NavigationPresentationHostModifier(
                     navigation: navigation,
                     index: index + 1,
                     isEnabled: isReadyForNextPresentation

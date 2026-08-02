@@ -21,7 +21,7 @@ struct ContentView: View {
                 navigation.makeView()
             case .custom:
                 CustomNavigationHost(navigation: navigation)
-                    .navigationPresentations(navigation)
+                    .navigationPresentations(for: navigation)
             }
         }
     }
@@ -79,7 +79,7 @@ private struct CustomRootBar: View {
                     } label: {
                         Label(
                             title: { Text(root.destination.titleKey) },
-                            icon: { root.destination.image }
+                            icon: { root.destination.icon }
                         )
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)

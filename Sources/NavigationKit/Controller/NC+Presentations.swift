@@ -5,23 +5,8 @@
 
 public extension NavigationController {
     /// Whether the configured presentation stack has room for another layer.
-    var canPresent: Bool {
+    var hasPresentationCapacity: Bool {
         presentations.count < configuration.maximumPresentationDepth
-    }
-
-    /// Navigates inside a presented destination's independent route path.
-    ///
-    /// The operation uses the same first-match reuse behavior as root
-    /// navigation. A missing presentation ID is a no-op.
-    func navigate(
-        to destination: Destination,
-        in presentationID: NavigationPresentation<Destination>.ID
-    ) {
-        guard let presentation = presentation(id: presentationID) else {
-            return
-        }
-
-        navigatePath(&presentation.path, to: destination)
     }
 
     /// Appends a new native presentation layer using the configured default
@@ -56,7 +41,7 @@ public extension NavigationController {
         path: [Destination] = [],
         onDismiss: (@MainActor () -> Void)? = nil
     ) -> NavigationPresentation<Destination>? {
-        guard canPresent else {
+        guard hasPresentationCapacity else {
             return nil
         }
 
@@ -111,19 +96,5 @@ public extension NavigationController {
         }
 
         removePresentations(from: presentations.startIndex)
-    }
-
-    /// Reads or replaces a presented destination's independent route path.
-    ///
-    /// A missing presentation ID reads as an empty path and ignores writes.
-    subscript(
-        presentation presentationID: NavigationPresentation<Destination>.ID
-    ) -> [Destination] {
-        get {
-            presentation(id: presentationID)?.path ?? []
-        }
-        set {
-            presentation(id: presentationID)?.path = newValue
-        }
     }
 }

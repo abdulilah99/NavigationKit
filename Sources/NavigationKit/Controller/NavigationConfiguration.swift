@@ -1,5 +1,5 @@
 //
-//  NavigationControllerConfiguration.swift
+//  NavigationConfiguration.swift
 //  NavigationKit
 //
 
@@ -7,7 +7,7 @@
 ///
 /// Updating a configuration changes future controller operations. It does not
 /// rewrite existing root paths or presentations.
-public struct NavigationControllerConfiguration: Hashable, Sendable {
+public struct NavigationConfiguration: Hashable, Sendable {
     /// The style used by `present` when no explicit style is supplied.
     public var defaultPresentationStyle: NavigationPresentationStyle
 

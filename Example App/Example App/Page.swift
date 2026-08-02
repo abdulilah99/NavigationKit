@@ -38,7 +38,7 @@ enum Page: Navigable {
         }
     }
 
-    var image: Image {
+    var icon: Image {
         switch self {
         case .home:
             Image(systemName: "house")
@@ -58,7 +58,7 @@ enum Page: Navigable {
     }
 
     @ViewBuilder
-    var destination: some View {
+    var content: some View {
         switch self {
         case .home:
             HomeView()
@@ -77,15 +77,6 @@ enum Page: Navigable {
         }
     }
 
-    @available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *)
-    var role: TabRole? {
-        switch self {
-        case .search:
-            .search
-        default:
-            nil
-        }
-    }
 }
 
 private struct HomeView: View {
@@ -98,19 +89,7 @@ private struct HomeView: View {
                 NavigationLink(value: Page.library)
             }
 
-            Section("Programmatic navigation") {
-                Button("Open Article 2 on Home") {
-                    navigation.navigate(to: .article(2), on: .home)
-                }
-
-                Button("Open Article 3 in Library") {
-                    navigation.navigate(to: .article(3), on: .library)
-                }
-
-                Button("Select Settings root") {
-                    navigation.select(root: .settings)
-                }
-            }
+            RootNavigationCommandsSection(navigation: navigation)
 
             Section("Modal presentation stacks") {
                 Button("Present Article 10 using the configured style") {
@@ -137,6 +116,41 @@ private struct HomeView: View {
             PresentationStateSection(navigation: navigation)
         }
         .navigationTitle("Home")
+    }
+}
+
+private struct RootNavigationCommandsSection: View {
+    let navigation: NavigationController<Page>
+
+    var body: some View {
+        Section("Programmatic navigation") {
+            Button("Open Article 2 on Home") {
+                navigation.navigate(to: .article(2), on: .home)
+            }
+
+            Button("Open Article 3 in Library") {
+                navigation.navigate(to: .article(3), on: .library)
+            }
+
+            Button("Navigate back on Home") {
+                navigation.navigateBack(on: .home)
+            }
+
+            Button("Return Home to its root") {
+                navigation.returnToRoot(on: .home)
+            }
+
+            Button("Replace the Library path") {
+                navigation.replacePath(
+                    with: [.article(4), .article(5)],
+                    on: .library
+                )
+            }
+
+            Button("Select Settings root") {
+                navigation.select(root: .settings)
+            }
+        }
     }
 }
 
@@ -185,7 +199,7 @@ private struct ControllerConfigurationSection: View {
             }
 
             Text(
-                navigation.canPresent
+                navigation.hasPresentationCapacity
                     ? "The controller can present another layer."
                     : "The presentation limit has been reached."
             )
@@ -282,21 +296,48 @@ private struct ArticleView: View {
                 Button("Present Player \(id) full screen") {
                     navigation.present(.player(id), as: .fullScreen)
                 }
-
-                if let presentation = navigation.presentations.last {
-                    Button("Push Article \(id + 1) inside this modal") {
-                        navigation.navigate(
-                            to: .article(id + 1),
-                            in: presentation.id
-                        )
-                    }
-                }
             }
 
+            PresentationNavigationCommandsSection(navigation: navigation)
             PresentationControlsSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
         .navigationTitle("Article \(id)")
+    }
+}
+
+private struct PresentationNavigationCommandsSection: View {
+    let navigation: NavigationController<Page>
+
+    var body: some View {
+        Section("Top presentation navigation") {
+            if let presentation = navigation.presentations.last {
+                Button("Navigate to Article 40") {
+                    navigation.navigate(
+                        to: .article(40),
+                        in: presentation.id
+                    )
+                }
+
+                Button("Navigate back") {
+                    navigation.navigateBack(in: presentation.id)
+                }
+
+                Button("Return to the presentation root") {
+                    navigation.returnToRoot(in: presentation.id)
+                }
+
+                Button("Replace the presentation path") {
+                    navigation.replacePath(
+                        with: [.article(41), .filters],
+                        in: presentation.id
+                    )
+                }
+            } else {
+                Text("No modal presentation to navigate")
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 
@@ -391,14 +432,14 @@ private struct PresentationStateSection: View {
                     HStack {
                         Label(
                             title: { Text(presentation.destination.titleKey) },
-                            icon: { presentation.destination.image }
+                            icon: { presentation.destination.icon }
                         )
 
                         Spacer()
 
                         VStack(alignment: .trailing) {
                             Text(presentation.style.titleKey)
-                            Text("\(presentation.path.count) pushed")
+                            Text("\(presentation.path.count) destinations")
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -466,11 +507,11 @@ private struct NavigationStateSection: View {
                 HStack {
                     Label(
                         title: { Text(root.destination.titleKey) },
-                        icon: { root.destination.image }
+                        icon: { root.destination.icon }
                     )
 
                     Spacer()
-                    Text("\(root.path.count) pushed")
+                    Text("\(root.path.count) destinations")
                         .foregroundStyle(.secondary)
                 }
             }

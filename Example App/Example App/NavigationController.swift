@@ -15,7 +15,7 @@ func makeExampleNavigationController() -> NavigationController<Page> {
                 destination: .home,
                 surfacePolicy: NavigationSurfacePolicy(
                     compact: .tabBar,
-                    expanded: .all,
+                    regular: .all,
                     television: .sidebar,
                     desktop: .sidebar,
                     spatial: .all
@@ -25,7 +25,7 @@ func makeExampleNavigationController() -> NavigationController<Page> {
                 destination: .library,
                 surfacePolicy: NavigationSurfacePolicy(
                     compact: .tabBar,
-                    expanded: .sidebar,
+                    regular: .sidebar,
                     television: .sidebar,
                     desktop: .sidebar,
                     spatial: .all
@@ -35,17 +35,18 @@ func makeExampleNavigationController() -> NavigationController<Page> {
                 destination: .search,
                 surfacePolicy: NavigationSurfacePolicy(
                     compact: .tabBar,
-                    expanded: .sidebar,
+                    regular: .sidebar,
                     television: .sidebar,
                     desktop: .sidebar,
                     spatial: .all
-                )
+                ),
+                role: .search
             ),
             NavigationRoot(
                 destination: .settings,
                 surfacePolicy: NavigationSurfacePolicy(
                     compact: [],
-                    expanded: .sidebar,
+                    regular: .sidebar,
                     television: .sidebar,
                     desktop: .sidebar,
                     spatial: .sidebar
@@ -53,7 +54,7 @@ func makeExampleNavigationController() -> NavigationController<Page> {
             ),
         ],
         selectedRoot: .home,
-        configuration: NavigationControllerConfiguration(
+        configuration: NavigationConfiguration(
             defaultPresentationStyle: .sheet,
             maximumPresentationDepth: 8
         )
