@@ -1,5 +1,6 @@
 import NavigationKit
 
+/// Builds the example's fixed root catalog and its platform-specific placement.
 @MainActor
 func makeExampleNavigationController() -> NavigationController<Page> {
     NavigationController(

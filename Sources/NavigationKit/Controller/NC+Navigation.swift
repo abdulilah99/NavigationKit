@@ -6,6 +6,10 @@
 //
 
 public extension NavigationController {
+    /// Selects a destination from the controller's fixed root catalog.
+    ///
+    /// An unconfigured destination is ignored. Selecting a root preserves the
+    /// independent navigation paths owned by every root.
     func select(root: Destination) {
         updateSelection(to: root)
     }

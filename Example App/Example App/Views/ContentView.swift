@@ -3,13 +3,13 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(NavigationController<Page>.self) private var navigation
-    @State private var viewStyle = ExampleViewStyle.native
+    @State private var viewMode = NavigationViewMode.native
 
     var body: some View {
         VStack(spacing: 0) {
-            ViewStylePicker(selection: $viewStyle)
+            NavigationViewModePicker(selection: $viewMode)
 
-            switch viewStyle {
+            switch viewMode {
             case .native:
                 navigation.makeView()
             case .custom:

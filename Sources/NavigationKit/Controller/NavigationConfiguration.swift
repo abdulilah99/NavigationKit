@@ -22,6 +22,9 @@ public struct NavigationConfiguration: Hashable, Sendable {
         }
     }
 
+    /// Creates the policies used by a navigation controller.
+    ///
+    /// - Precondition: `maximumPresentationDepth` is not negative.
     public init(
         defaultPresentationStyle: NavigationPresentationStyle = .sheet,
         maximumPresentationDepth: Int = 8
@@ -32,6 +35,7 @@ public struct NavigationConfiguration: Hashable, Sendable {
         self.maximumPresentationDepth = maximumPresentationDepth
     }
 
+    /// NavigationKit's default controller-wide policies.
     public static let `default` = Self()
 
     private static func validate(maximumPresentationDepth: Int) {

@@ -1,6 +1,8 @@
 import NavigationKit
 import SwiftUI
 
+/// Demonstrates custom navigation chrome backed by the same controller used by
+/// NavigationKit's native view.
 struct CustomNavigationView: View {
     let navigation: NavigationController<Page>
 

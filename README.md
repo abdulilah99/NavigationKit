@@ -1,30 +1,44 @@
 # NavigationKit
 
-NavigationKit is a SwiftUI navigation library for programmatic, type-safe navigation across iOS, iPadOS, macOS, tvOS, and visionOS.
+NavigationKit provides type-safe, programmatic SwiftUI navigation for iOS,
+iPadOS, macOS, tvOS, and visionOS.
 
-It provides two ways to use the same navigation state:
+Its central idea is simple: a tab, a sidebar item, a route, a sheet, and a
+full-screen presentation are all placements of the same destination. A page can
+be a tab on iPhone, a sidebar item on iPad, and a route somewhere else without
+becoming a different concept in the app's model.
 
-- Call `controller.makeView()` for NavigationKit's native platform-adaptive view.
-- Build your own tab bar, sidebar, or other navigation chrome using the controller's roots, selection, and commands.
+NavigationKit can provide the native navigation view, or it can provide only
+the state and commands behind navigation chrome that you build yourself.
 
-Tabs, navigation-path destinations, sheets, and full-screen presentations use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, occur in a navigation path, or appear multiple times in a modal stack.
+## Capabilities
+
+- One `Navigable` type for roots, routes, sheets, and full-screen presentations.
+- A fixed root catalog with an independent, retained path for every root.
+- Programmatic root selection, navigation, backward navigation, returning to a
+  root, and complete path replacement.
+- Native adaptive navigation using modern SwiftUI tabs and sidebars, with a
+  native `TabView` fallback on older supported releases.
+- Platform-specific root placement without changing destination identity or
+  navigation behavior.
+- Native search-root roles where the platform supports them.
+- Nested modal stacks with stable occurrence identity and an independent route
+  path inside every presentation.
+- Configurable presentation style and maximum modal depth.
+- Custom tab bars, sidebars, and other navigation views backed by the same
+  controller and commands.
+- First-class tvOS support using native focus and navigation behavior.
 
 ## Platform support
 
 | Platform | Minimum | Modern navigation view |
-| --- | ---: | --- |
-| iOS and iPadOS | 17 | iOS 18 |
-| tvOS | 17 | tvOS 18 |
-| macOS | 14 | macOS 15 |
-| visionOS | 1 | visionOS 2 |
+| --- | ---: | ---: |
+| iOS and iPadOS | 17 | 18 |
+| tvOS | 17 | 18 |
+| macOS | 14 | 15 |
+| visionOS | 1 | 2 |
 
-On modern releases, NavigationKit uses SwiftUI's typed `Tab` API and sidebar-adaptable presentation. On older supported releases, it falls back to a native `TabView` while retaining the same controller and independent root paths.
-
-## Requirements
-
-- Swift 6.0 or newer
-- Xcode 16 or newer
-- SwiftUI and Observation
+The package requires Swift 6 and Xcode 16 or newer.
 
 ## Installation
 
@@ -34,7 +48,8 @@ Add the package in Xcode using:
 https://github.com/abdulilah99/NavigationKit.git
 ```
 
-The API documented here describes the upcoming 0.2 release. Until 0.2 is tagged, select the repository's development branch. After the release, use the 0.2 version requirement:
+The API documented here targets NavigationKit 0.2. Until 0.2 is tagged, select
+the repository's development branch. After release, use:
 
 ```swift
 .package(
@@ -43,30 +58,18 @@ The API documented here describes the upcoming 0.2 release. Until 0.2 is tagged,
 )
 ```
 
-Add the `NavigationKit` product to your app target, then import it:
+Add the `NavigationKit` product to the app target and import it:
 
 ```swift
 import NavigationKit
 ```
 
-## Core model
+## Getting started
 
-NavigationKit uses six core types:
+### Define the destinations
 
-- `Navigable` describes every destination in the application.
-- `NavigationRoot` gives a configured top-level destination an independent path and presentation policy.
-- `NavigationSurfacePolicy` describes where a root appears without changing what the destination is.
-- `NavigationPresentation` represents one stable occurrence in the modal stack and owns an independent route path.
-- `NavigationConfiguration` contains mutable controller-wide policies.
-- `NavigationController` owns the fixed root catalog, selected root, modal stack, and navigation commands.
-
-“Tab,” “route,” “sheet,” and “full screen” are presentation terms rather than separate destination types.
-
-## Quick start
-
-### 1. Define one destination type
-
-An enum is a natural fit because its cases describe every reachable location and associated values provide identity for detail screens.
+One type describes every location the app can display. An enum works well
+because associated values can carry the identity of detail pages.
 
 ```swift
 import NavigationKit
@@ -110,15 +113,14 @@ enum Page: Navigable {
 }
 ```
 
-Destination values must encode meaningful identity. For example, `.article(id: 42)` and `.article(id: 73)` are distinct locations and can coexist in a path.
+`titleKey` is intentionally a `LocalizedStringKey`, so SwiftUI resolves it as
+localizable text. Destination values should encode meaningful identity:
+`.article(id: 42)` and `.article(id: 73)` are different locations.
 
-`titleKey` deliberately uses `LocalizedStringKey`: its value is a localizable
-key consumed by SwiftUI's `Text`, not an already-resolved display title.
-`icon` and `content` describe the destination's standard label image and view.
+### Configure the roots
 
-### 2. Create the roots and controller
-
-Only destinations placed in the controller's root catalog can be selected as roots. Each root owns an independent typed path.
+A root is a destination configured as a top-level entry. Every root owns an
+independent route path that survives switching to another root.
 
 ```swift
 @MainActor
@@ -129,26 +131,38 @@ func makeNavigationController() -> NavigationController<Page> {
             NavigationRoot(destination: .library),
             NavigationRoot(destination: .settings),
         ],
-        selectedRoot: .home,
-        configuration: NavigationConfiguration(
-            defaultPresentationStyle: .sheet,
-            maximumPresentationDepth: 8
-        )
+        selectedRoot: .home
     )
 }
 ```
 
-`selectedRoot` is optional during initialization. When omitted, the first configured root is selected.
+The root catalog is fixed for the controller's lifetime. This gives roots
+stable identity and preserves their navigation paths, SwiftUI state, and tvOS
+focus behavior.
 
-The controller fails immediately when configured with:
+The controller requires:
 
-- No roots.
-- Duplicate root destinations.
-- An initial selection that is not in the root catalog.
+- At least one root.
+- A unique destination for every root.
+- An initial selection that belongs to the root catalog.
+- Unique initial presentation IDs.
+- An initial presentation stack within the configured maximum depth.
 
-The catalog is intentionally fixed for the controller's lifetime. This preserves root identity, paths, SwiftUI state, and tvOS focus behavior.
+If `selectedRoot` is omitted, the first root is selected.
 
-### 3. Store and inject the controller
+Roots can start with a route path when the app already has navigation state:
+
+```swift
+NavigationRoot(
+    destination: Page.library,
+    path: [.article(id: 42)]
+)
+```
+
+`NavigationController` also accepts an initial presentation stack for apps
+that construct the complete initial state themselves.
+
+### Inject the controller
 
 ```swift
 @main
@@ -164,7 +178,7 @@ struct ExampleApp: App {
 }
 ```
 
-Destination views can then access the same controller:
+Views can read the same observable controller from the environment:
 
 ```swift
 struct HomeView: View {
@@ -178,7 +192,7 @@ struct HomeView: View {
 }
 ```
 
-### 4. Use the native navigation view
+### Make the native navigation view
 
 ```swift
 struct ContentView: View {
@@ -190,134 +204,82 @@ struct ContentView: View {
 }
 ```
 
-The view selects the appropriate native implementation for the running OS. Navigation commands and retained paths behave the same in the modern and legacy views.
+`makeView()` selects the modern or legacy native implementation for the running
+OS and installs modal presentation handling automatically.
 
-## Navigation commands
+## Root navigation
 
-### Select a root
+All path mutations go through the controller, keeping native and custom
+navigation views synchronized.
+
+| Capability | Command |
+| --- | --- |
+| Select a configured root | `navigation.select(root: .library)` |
+| Navigate on the selected root | `navigation.navigate(to: .article(id: 42))` |
+| Navigate on another root | `navigation.navigate(to: .article(id: 42), on: .library)` |
+| Navigate backward | `navigation.navigateBack()` |
+| Navigate backward multiple steps | `navigation.navigateBack(2, on: .library)` |
+| Return to a root destination | `navigation.returnToRoot(on: .library)` |
+| Read a root path | `navigation[.library]` |
+| Replace a complete path | `navigation.replacePath(with: path, on: .library)` |
+
+When an `on:` root is supplied, a successful operation also selects that root.
+Unconfigured roots are ignored, and reading one returns an empty path.
+
+`navigate(to:)` reuses the first matching destination already in the target
+path. If the destination is absent, it is appended. If it is present, everything
+after that occurrence is removed. This avoids adding duplicate path entries for
+ordinary programmatic navigation.
+
+`navigateBack` removes up to the requested number of entries. Nonpositive
+counts are ignored, and navigating farther back than the current depth safely
+returns to the root.
+
+Paths are publicly readable but mutate only through controller commands.
+
+### Typed navigation links
+
+NavigationKit adds a label convenience for value-based links:
 
 ```swift
-navigation.select(root: .library)
+NavigationLink(value: Page.article(id: 42))
 ```
 
-Selection succeeds only when the destination belongs to the fixed root catalog. An unconfigured destination is ignored.
+The label uses the destination's `titleKey` and `icon`. The root or modal
+navigation stack registers the matching typed destination automatically.
 
-### Navigate on the selected root
+A configured root can also be used as a normal route:
 
 ```swift
-navigation.navigate(to: .article(id: 42))
+NavigationLink(value: Page.library)
 ```
 
-### Navigate on another root
+This displays Library inside the current path. It does not select the Library
+root, because route placement and root selection are separate operations.
+
+## Modal navigation
+
+Modal stacks are part of `NavigationController`; they do not need a second
+destination type or controller.
+
+### Present a destination
 
 ```swift
-navigation.navigate(
-    to: .article(id: 42),
-    on: .library
-)
-```
-
-This updates the Library path and selects the Library root in one operation.
-
-`navigate(to:on:)` has reuse semantics:
-
-- If the destination is absent, it is appended.
-- If it already exists, everything after its first occurrence is removed.
-- When a target root is provided, that root is selected after its path is updated.
-- If the target root is not configured, nothing changes.
-
-### Navigate back
-
-```swift
-navigation.navigateBack()
-navigation.navigateBack(2, on: .library)
-```
-
-The selected root is used when `on:` is omitted. The command removes up to the
-requested number of destinations, so asking to navigate back farther than the
-path depth safely returns to the root. A nonpositive count is a no-op.
-
-When `on:` is supplied, the configured root is selected after its path is
-updated. An unconfigured root is a no-op.
-
-### Return to a root destination
-
-```swift
-navigation.returnToRoot()
-navigation.returnToRoot(on: .library)
-```
-
-This empties the selected or specified root's navigation path. A specified root
-is also selected.
-
-### Read or replace a root path
-
-```swift
-let libraryPath = navigation[.library]
-
-navigation.replacePath(
-    with: [
-        .article(id: 10),
-        .article(id: 11),
-    ],
-    on: .library
-)
-```
-
-Paths are externally read-only and change through controller commands. This
-keeps custom chrome and NavigationKit's native view on the same validated
-mutation surface. Reading an unconfigured root returns an empty path;
-replacement is a no-op.
-
-## Controller configuration
-
-`NavigationConfiguration` contains policies that apply across the
-whole controller:
-
-```swift
-let configuration = NavigationConfiguration(
-    defaultPresentationStyle: .sheet,
-    maximumPresentationDepth: 8
-)
-
-let navigation = NavigationController(
-    roots: roots,
-    configuration: configuration
-)
-```
-
-The configuration is mutable after initialization:
-
-```swift
-navigation.configuration.defaultPresentationStyle = .fullScreen
-navigation.configuration.maximumPresentationDepth = 4
-```
-
-Configuration changes affect future operations. They do not rewrite existing
-paths or presentations. Lowering the maximum below the current presentation
-depth preserves the current stack and blocks new presentations until enough
-layers are dismissed. A maximum depth of zero disables new presentations.
-
-## Modal presentation stacks
-
-Modal presentation is part of `NavigationController`; there is no separate modal destination type or controller.
-
-### Present destinations
-
-```swift
-navigation.present(.settings, as: .sheet)
+navigation.present(.settings)
+navigation.present(.article(id: 42), as: .sheet)
 navigation.present(.article(id: 42), as: .fullScreen)
+navigation.present(
+    .library,
+    path: [.article(id: 42)]
+)
 ```
 
-Omit `as:` to use `configuration.defaultPresentationStyle`:
+Omitting `as:` uses `configuration.defaultPresentationStyle`. Each call creates
+a new presentation occurrence, so the same destination can appear more than
+once in a stack without an identity collision.
 
-```swift
-navigation.present(.article(id: 42))
-```
-
-`present` appends a new occurrence while the controller is below its configured
-maximum depth. It returns `nil` without changing state when the limit has been
-reached:
+`present` returns the created `NavigationPresentation`, or `nil` when the
+configured depth limit has been reached:
 
 ```swift
 guard let presentation = navigation.present(.article(id: 42)) else {
@@ -325,13 +287,13 @@ guard let presentation = navigation.present(.article(id: 42)) else {
 }
 ```
 
-Use `navigation.hasPresentationCapacity` when presentation availability should
-be reflected in custom UI. Rejected presentations do not retain or invoke their
-dismissal callbacks.
+`navigation.hasPresentationCapacity` exposes the same capacity check for
+custom UI.
 
-Occurrence identity is separate from destination identity. Presenting `.article(id: 42)` twice produces two distinct stack entries, which is useful for recursive workflows and repeated detail contexts.
+### Navigate inside a presentation
 
-Every presentation owns an independent typed route path. Navigate within one presentation using its stable ID:
+Every presentation owns a route path independent from all roots and other
+presentations. Use the occurrence's stable ID to address it:
 
 ```swift
 navigation.navigate(
@@ -341,23 +303,17 @@ navigation.navigate(
 
 navigation.navigateBack(in: presentation.id)
 navigation.returnToRoot(in: presentation.id)
+navigation.replacePath(with: [.article(id: 44)], in: presentation.id)
 
-navigation.replacePath(
-    with: [
-        .article(id: 44),
-        .article(id: 45),
-    ],
-    in: presentation.id
-)
+let path = navigation[presentation: presentation.id]
 ```
 
-Presentation-path commands have the same safe semantics as their root
-counterparts. Missing presentation IDs are no-ops, and the root paths underneath
-the modal stack are unaffected.
+Missing presentation IDs are safely ignored, and reading one returns an empty
+path.
 
-### Build nested stacks
+### Build and dismiss a modal stack
 
-Presenting while another destination is presented creates a native child presentation:
+Presenting again while a modal is active adds a native child presentation:
 
 ```swift
 navigation.present(.article(id: 42), as: .sheet)
@@ -365,9 +321,8 @@ navigation.present(.settings, as: .sheet)
 navigation.present(.article(id: 43), as: .fullScreen)
 ```
 
-NavigationKit presents these as a real hierarchy: application content presents the article, the article presents the filters, and the filters present the player. It does not use timing delays to simulate a stack.
-
-### Dismiss presentations
+Dismiss from the top, remove a number of layers, clear the stack, or dismiss a
+specific occurrence and everything presented above it:
 
 ```swift
 navigation.dismissPresentation()
@@ -376,57 +331,64 @@ navigation.dismissAllPresentations()
 navigation.dismissPresentation(id: presentation.id)
 ```
 
-`dismissPresentation(id:)` removes the identified presentation and every presentation above it. A native child cannot outlive the presentation that owns it. Dismissal callbacks run exactly once in top-to-bottom order:
+This cascading behavior matches native ownership: a child presentation cannot
+outlive the presentation that owns it. Interactive sheet dismissal and the
+tvOS remote's native dismissal behavior update the same controller state.
+
+An optional callback runs exactly once when its occurrence leaves the stack:
 
 ```swift
-navigation.present(.settings, as: .sheet) {
-    // Runs when this occurrence leaves the controller's stack.
+navigation.present(.settings) {
+    // The Settings occurrence was dismissed.
 }
 ```
 
-The public `presentations` array is read-only from outside the controller and can be inspected to render debugging or custom state UI.
+Callbacks for cascading dismissal run from the top presentation downward.
+The read-only `navigation.presentations` array is available when custom UI
+needs to inspect the active occurrences, styles, or paths.
 
-### Platform behavior
-
-- `.sheet` uses native sheets everywhere.
-- `.fullScreen` uses native full-screen covers on iOS and tvOS.
-- macOS and visionOS do not expose SwiftUI full-screen covers, so `.fullScreen` deterministically falls back to a native sheet there.
-- Remote Back/Menu and interactive sheet dismissal update the same controller stack.
-
-### Migrating from ModalKit
-
-NavigationKit 0.2 removes the separate `ModalKit` product and its `Modal` and `ModalController` protocols.
-
-- Add only the `NavigationKit` product and remove `import ModalKit`.
-- Add modal-only cases to the same type that conforms to `Navigable`.
-- Replace `present(sheet:)` with `navigation.present(_:as:path:onDismiss:)`.
-- Replace mutation of a `sheets` array with the explicit dismissal commands.
-- Remove `.sheets(items:)`. `makeView()` presents modal content automatically; custom navigation views apply `.navigationPresentations(for: navigation)` once.
-
-## Typed NavigationLink convenience
-
-NavigationKit provides a label convenience for navigable values:
+### Configure modal behavior
 
 ```swift
-NavigationLink(value: Page.article(id: 42))
+let navigation = NavigationController(
+    roots: roots,
+    configuration: NavigationConfiguration(
+        defaultPresentationStyle: .sheet,
+        maximumPresentationDepth: 8
+    )
+)
 ```
 
-It builds the link's label from the destination's localizable `titleKey` and `icon`. The root's `NavigationStack` registers the matching typed destination automatically.
-
-The same configured root can also occur in a navigation path:
+The configuration remains editable:
 
 ```swift
-NavigationLink(value: Page.library)
+navigation.configuration.defaultPresentationStyle = .fullScreen
+navigation.configuration.maximumPresentationDepth = 4
 ```
 
-This navigates to Library inside the current stack. It does not select the Library root.
+Changes affect future operations and do not rewrite existing paths or
+presentations. A maximum depth of zero disables new presentations. Lowering the
+limit below the current stack depth keeps the existing stack but prevents new
+layers until enough have been dismissed.
+
+The depth limit bounds recursive presentation flows while still allowing apps
+to choose a limit appropriate for their design.
+
+### Presentation styles by platform
+
+- `.sheet` uses a native sheet on every supported platform.
+- `.fullScreen` uses a native full-screen cover on iOS and tvOS.
+- macOS and visionOS map `.fullScreen` to a native sheet because SwiftUI does
+  not provide the same full-screen-cover API there.
 
 ## Platform-specific root placement
 
-Placement belongs to each `NavigationRoot`, not to the destination's identity.
+Placement belongs to `NavigationRoot`, not `Navigable`. The same destination
+therefore remains usable as a root, route, or modal regardless of how each
+platform displays its configured root.
 
 ```swift
-let settingsRoot = NavigationRoot(
+NavigationRoot(
     destination: Page.settings,
     surfacePolicy: NavigationSurfacePolicy(
         compact: [],
@@ -438,28 +400,9 @@ let settingsRoot = NavigationRoot(
 )
 ```
 
-Available semantic contexts:
-
-```swift
-NavigationSurfaceContext.compact
-NavigationSurfaceContext.regular
-NavigationSurfaceContext.television
-NavigationSurfaceContext.desktop
-NavigationSurfaceContext.spatial
-```
-
-Available surfaces:
-
-```swift
-NavigationSurfaces.tabBar
-NavigationSurfaces.sidebar
-NavigationSurfaces.all
-[]
-```
-
-An empty surface set hides the root from navigation chrome where the native platform API supports it. The root remains configured and can still be selected programmatically.
-
-You can use one placement everywhere:
+The semantic contexts are `.compact`, `.regular`, `.television`, `.desktop`,
+and `.spatial`. Each context accepts `.tabBar`, `.sidebar`, `.all`, or an empty
+set. A single placement can be used everywhere:
 
 ```swift
 NavigationRoot(
@@ -468,17 +411,32 @@ NavigationRoot(
 )
 ```
 
-### Native limitations
+An empty set asks native navigation chrome to hide the root. The root remains
+configured, retains its path, and can still be selected programmatically.
 
-Not every platform and OS generation exposes identical tab/sidebar visibility controls:
+Native visibility controls differ by platform and OS version. The legacy view
+keeps every root in its `TabView`, and some modern platforms cannot express
+every tab/sidebar combination. NavigationKit applies a deterministic native
+best effort without changing root membership, selection semantics, or paths.
 
-- The iOS 17, tvOS 17, macOS 14, and visionOS 1 fallback keeps every root in its native `TabView`; it cannot exactly honor hidden-root policy without also removing that root's content.
-- tvOS and macOS do not expose every visibility combination available on iOS and visionOS.
-- NavigationKit uses deterministic native best-effort mappings. Surface limitations never alter selection, root membership, or retained paths.
+### Search roots
 
-## Custom navigation chrome
+Add the search role when configuring a root:
 
-You do not need `makeView()` to use NavigationKit. Build controls from the same controller and render the selected root's content:
+```swift
+NavigationRoot(
+    destination: Page.search,
+    role: .search
+)
+```
+
+The modern view maps this to SwiftUI's native search tab role. The legacy view
+keeps the root and its state but has no equivalent role API.
+
+## Custom navigation views
+
+Apps do not have to call `makeView()`. A custom navigation view can render the
+selected root and use the same controller for selection and commands:
 
 ```swift
 struct CustomNavigationView: View {
@@ -510,38 +468,27 @@ struct CustomNavigationView: View {
 }
 ```
 
-Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(for: navigation)` exactly once around a custom navigation view. `makeView()` installs it automatically.
+Custom navigation views decide their own layout, styling, root visibility, and
+focus behavior. Apply `.navigationPresentations(for:)` exactly once around a
+custom view so it can display the controller's modal stack. `makeView()` applies
+it automatically.
 
-## Root roles
-
-Semantic roles belong to configured roots rather than every destination. For example, mark a search root when building the controller:
-
-```swift
-NavigationRoot(
-    destination: Page.search,
-    role: .search
-)
-```
-
-NavigationKit maps `NavigationRootRole.search` to SwiftUI's native search tab role in the modern view. The legacy view preserves the root and its navigation state but has no equivalent role API.
-
-## tvOS guidance
+## tvOS
 
 NavigationKit treats tvOS as a primary platform:
 
 - tvOS 18 uses the modern native tab/sidebar view.
 - tvOS 17 uses the native `TabView` fallback.
-- Each root retains its own `NavigationStack` path.
-- Standard stack navigation lets the remote's Back/Menu behavior remain native.
-- Nested sheets and full-screen covers use native presentation and dismissal behavior.
-- Custom chrome should use native focusable controls such as `Button` and `NavigationLink`, not tap gestures.
-- Keep focus state inside views rather than shared navigation state.
+- Every root and modal occurrence retains its own `NavigationStack` path.
+- Stack navigation and modal dismissal remain native to the remote.
+- Custom chrome can use normal focusable `Button` and `NavigationLink` views.
+- Focus state stays in the app's views instead of entering shared navigation
+  state.
 
-The included example target supports tvOS and demonstrates both the native navigation view and a focusable custom root bar.
+## Using a larger app model
 
-## Using the controller in a larger app model
-
-`NavigationController` is concrete so it can enforce its catalog and selection invariants. Applications that need unrelated shared state should use composition:
+`NavigationController` is concrete so it can enforce its navigation invariants.
+Compose it into a larger observable model when the app has unrelated state:
 
 ```swift
 @Observable
@@ -556,72 +503,32 @@ final class AppModel {
 }
 ```
 
-This keeps navigation behavior consistent instead of asking each application controller to reimplement it.
-
 ## Example application
 
-Open:
+Open `Example App/Example App.xcodeproj`. The example can switch at runtime
+between NavigationKit's native view and custom navigation chrome backed by the
+same controller. It demonstrates:
 
-```text
-Example App/Example App.xcodeproj
-```
+- Roots that retain independent paths.
+- A destination used as both a root and a route.
+- Every root navigation command.
+- Platform-specific root placement and a search root.
+- Nested sheets and full-screen presentations.
+- Repeated occurrences of the same modal destination.
+- Independent paths and navigation commands inside presentations.
+- Cascading dismissal and runtime-editable controller configuration.
+- A focusable custom root bar on tvOS.
+- iOS, iPadOS, macOS, tvOS, and visionOS from one example target.
 
-The example demonstrates:
+## Current scope
 
-- Native navigation using `makeView()`.
-- Custom root chrome using the same controller.
-- Runtime switching between both navigation views.
-- A destination used as both a root and a navigation-path destination.
-- Programmatic navigation on the current and another root.
-- Backward navigation, returning to a root, and exact path replacement.
-- The same navigation commands applied inside modal presentations.
-- Independent retained paths.
-- Nested sheet and full-screen presentation stacks.
-- Repeated modal occurrences of the same destination.
-- Independent route paths inside modal presentations.
-- Top, counted, cascading, and complete modal dismissal.
-- Runtime editing of controller-wide presentation configuration.
-- Platform-specific surface policy.
-- A programmatically selectable root hidden from compact modern chrome.
-- A native search-role root.
-- iOS, iPadOS, macOS, tvOS, and visionOS from one target.
+NavigationKit 0.2 focuses on a homogeneous typed destination path, a fixed root
+catalog, native adaptive views, app-defined navigation chrome, independent root
+paths, and bounded modal stacks with independent presentation paths.
 
-## Current scope and roadmap
-
-NavigationKit currently focuses on:
-
-- A homogeneous, typed `[Destination]` path.
-- A fixed root catalog.
-- Independent paths for every root.
-- First-class modal stacks with independent paths for every presentation.
-- Explicit selection and navigation.
-- Native modern and legacy navigation views.
-- Custom-chrome access to the same state and commands.
-
-Not yet included in the finalized API:
-
-- `TabSection` support.
-- Dynamic root insertion and removal.
-- Deep-link parsing and atomic navigation intents.
-- Codable restoration helpers.
-- Persisted tab customization.
-
-## Design guarantees
-
-- Tabs, routes, sheets, and full-screen presentations share one destination type.
-- Modal occurrences have stable identity independent from destination identity.
-- Repeated destination values are valid in a modal stack.
-- Modal-stack growth is bounded by mutable controller configuration.
-- Removing a presentation removes every presentation above it.
-- Dismissal callbacks run exactly once from the top layer downward.
-- Surface placement never changes command behavior.
-- Switching roots preserves every root's path.
-- Root and presentation paths are externally read-only and mutate through
-  controller commands.
-- Hidden roots remain programmatically selectable.
-- Missing roots never get inserted implicitly.
-- Navigation state is isolated to the main actor.
-- The library uses native platform containers rather than a custom focus or tab engine.
+The current API does not yet include `TabSection` support, dynamic root
+insertion and removal, deep-link parsing, Codable restoration helpers, or
+persisted tab customization.
 
 ## Development
 
@@ -631,8 +538,6 @@ Run the package tests with:
 swift test
 ```
 
-The test suite covers path reuse, backward navigation, returning to roots, path
-replacement, hash collisions, cross-root navigation, missing-target no-ops,
-fixed catalog validation, independent paths, surface policies, controller
-configuration, bounded modal growth, repeated modal occurrences, modal paths,
-cascading dismissal, callbacks, and reentrant presentation.
+The test suite covers root and presentation navigation, path reuse, independent
+paths, fixed-catalog validation, surface policies, bounded and repeated modal
+occurrences, cascading dismissal, callbacks, and reentrant presentation.
