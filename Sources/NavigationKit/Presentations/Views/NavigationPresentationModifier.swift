@@ -1,11 +1,11 @@
 //
-//  NavigationPresentationHostModifier.swift
+//  NavigationPresentationModifier.swift
 //  NavigationKit
 //
 
 import SwiftUI
 
-struct NavigationPresentationHostModifier<Destination: Navigable>: ViewModifier {
+struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
     let navigation: NavigationController<Destination>
     let index: Int
     var isEnabled = true
@@ -52,7 +52,7 @@ struct NavigationPresentationHostModifier<Destination: Navigable>: ViewModifier 
         #if os(macOS) || os(visionOS)
         // These platforms map both semantic styles to their native sheet.
         content.sheet(item: presentationBinding(matching: nil)) { presentation in
-            NavigationPresentationContent(
+            NavigationPresentationView(
                 navigation: navigation,
                 presentation: presentation,
                 index: index
@@ -61,7 +61,7 @@ struct NavigationPresentationHostModifier<Destination: Navigable>: ViewModifier 
         #else
         content
             .sheet(item: presentationBinding(matching: .sheet)) { presentation in
-                NavigationPresentationContent(
+                NavigationPresentationView(
                     navigation: navigation,
                     presentation: presentation,
                     index: index
@@ -70,7 +70,7 @@ struct NavigationPresentationHostModifier<Destination: Navigable>: ViewModifier 
             .fullScreenCover(
                 item: presentationBinding(matching: .fullScreen)
             ) { presentation in
-                NavigationPresentationContent(
+                NavigationPresentationView(
                     navigation: navigation,
                     presentation: presentation,
                     index: index

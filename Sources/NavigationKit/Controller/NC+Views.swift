@@ -1,5 +1,5 @@
 //
-//  NC+Hosting.swift
+//  NC+Views.swift
 //  NavigationKit
 //
 //  Created by Abdulilah on 03/03/2025.
@@ -13,7 +13,7 @@ public extension NavigationController {
     /// Build custom navigation chrome directly from the controller's roots,
     /// selection, and navigation operations instead.
     func makeView() -> some View {
-        NavigationHost(navigation: self)
+        AdaptiveNavigationView(navigation: self)
             .navigationPresentations(for: self)
     }
 }

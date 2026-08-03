@@ -38,7 +38,7 @@ public final class NavigationRoot<Destination: Navigable>: Identifiable {
     public var content: some View {
         @Bindable var root = self
 
-        NavigationStackHost(
+        NavigationStackView(
             destination: destination,
             path: $root.path
         )

@@ -4,14 +4,14 @@ NavigationKit is a SwiftUI navigation library for programmatic, type-safe naviga
 
 It provides two ways to use the same navigation state:
 
-- Call `controller.makeView()` for NavigationKit's native platform-adaptive host.
+- Call `controller.makeView()` for NavigationKit's native platform-adaptive view.
 - Build your own tab bar, sidebar, or other navigation chrome using the controller's roots, selection, and commands.
 
 Tabs, navigation-path destinations, sheets, and full-screen presentations use one destination type. A destination may be a root on one platform, appear only in a sidebar on another, occur in a navigation path, or appear multiple times in a modal stack.
 
 ## Platform support
 
-| Platform | Minimum | Modern navigation host |
+| Platform | Minimum | Modern navigation view |
 | --- | ---: | --- |
 | iOS and iPadOS | 17 | iOS 18 |
 | tvOS | 17 | tvOS 18 |
@@ -178,7 +178,7 @@ struct HomeView: View {
 }
 ```
 
-### 4. Use the native host
+### 4. Use the native navigation view
 
 ```swift
 struct ContentView: View {
@@ -190,7 +190,7 @@ struct ContentView: View {
 }
 ```
 
-The host selects the appropriate native implementation for the running OS. Navigation commands and retained paths behave the same in the modern and legacy hosts.
+The view selects the appropriate native implementation for the running OS. Navigation commands and retained paths behave the same in the modern and legacy views.
 
 ## Navigation commands
 
@@ -265,7 +265,7 @@ navigation.replacePath(
 ```
 
 Paths are externally read-only and change through controller commands. This
-keeps custom chrome and NavigationKit's native host on the same validated
+keeps custom chrome and NavigationKit's native view on the same validated
 mutation surface. Reading an unconfigured root returns an empty path;
 replacement is a no-op.
 
@@ -365,7 +365,7 @@ navigation.present(.settings, as: .sheet)
 navigation.present(.article(id: 43), as: .fullScreen)
 ```
 
-NavigationKit hosts these as a real presenting hierarchy: application content presents the article, the article presents the filters, and the filters present the player. It does not use timing delays to simulate a stack.
+NavigationKit presents these as a real hierarchy: application content presents the article, the article presents the filters, and the filters present the player. It does not use timing delays to simulate a stack.
 
 ### Dismiss presentations
 
@@ -401,7 +401,7 @@ NavigationKit 0.2 removes the separate `ModalKit` product and its `Modal` and `M
 - Add modal-only cases to the same type that conforms to `Navigable`.
 - Replace `present(sheet:)` with `navigation.present(_:as:path:onDismiss:)`.
 - Replace mutation of a `sheets` array with the explicit dismissal commands.
-- Remove `.sheets(items:)`. `makeView()` hosts presentations automatically; custom hosts apply `.navigationPresentations(for: navigation)` once.
+- Remove `.sheets(items:)`. `makeView()` presents modal content automatically; custom navigation views apply `.navigationPresentations(for: navigation)` once.
 
 ## Typed NavigationLink convenience
 
@@ -481,7 +481,7 @@ Not every platform and OS generation exposes identical tab/sidebar visibility co
 You do not need `makeView()` to use NavigationKit. Build controls from the same controller and render the selected root's content:
 
 ```swift
-struct CustomNavigationHost: View {
+struct CustomNavigationView: View {
     let navigation: NavigationController<Page>
 
     var body: some View {
@@ -510,7 +510,7 @@ struct CustomNavigationHost: View {
 }
 ```
 
-Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(for: navigation)` exactly once around a custom host. `makeView()` installs it automatically.
+Custom chrome decides its own layout, styling, focus behavior, and which roots to expose. It should call controller commands rather than assigning selection directly. Apply `.navigationPresentations(for: navigation)` exactly once around a custom navigation view. `makeView()` installs it automatically.
 
 ## Root roles
 
@@ -523,13 +523,13 @@ NavigationRoot(
 )
 ```
 
-NavigationKit maps `NavigationRootRole.search` to SwiftUI's native search tab role on the modern host. The legacy host preserves the root and its navigation state but has no equivalent role API.
+NavigationKit maps `NavigationRootRole.search` to SwiftUI's native search tab role in the modern view. The legacy view preserves the root and its navigation state but has no equivalent role API.
 
 ## tvOS guidance
 
 NavigationKit treats tvOS as a primary platform:
 
-- tvOS 18 uses the modern native tab/sidebar host.
+- tvOS 18 uses the modern native tab/sidebar view.
 - tvOS 17 uses the native `TabView` fallback.
 - Each root retains its own `NavigationStack` path.
 - Standard stack navigation lets the remote's Back/Menu behavior remain native.
@@ -537,7 +537,7 @@ NavigationKit treats tvOS as a primary platform:
 - Custom chrome should use native focusable controls such as `Button` and `NavigationLink`, not tap gestures.
 - Keep focus state inside views rather than shared navigation state.
 
-The included example target supports tvOS and demonstrates both the native host and a focusable custom root bar.
+The included example target supports tvOS and demonstrates both the native navigation view and a focusable custom root bar.
 
 ## Using the controller in a larger app model
 
@@ -568,9 +568,9 @@ Example App/Example App.xcodeproj
 
 The example demonstrates:
 
-- Native `makeView()` hosting.
+- Native navigation using `makeView()`.
 - Custom root chrome using the same controller.
-- Runtime switching between both hosts.
+- Runtime switching between both navigation views.
 - A destination used as both a root and a navigation-path destination.
 - Programmatic navigation on the current and another root.
 - Backward navigation, returning to a root, and exact path replacement.
@@ -595,7 +595,7 @@ NavigationKit currently focuses on:
 - Independent paths for every root.
 - First-class modal stacks with independent paths for every presentation.
 - Explicit selection and navigation.
-- Native modern and legacy hosts.
+- Native modern and legacy navigation views.
 - Custom-chrome access to the same state and commands.
 
 Not yet included in the finalized API:

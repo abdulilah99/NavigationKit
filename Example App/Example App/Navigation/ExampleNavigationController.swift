@@ -1,10 +1,3 @@
-//
-//  NavigationController.swift
-//  Example App
-//
-//  Created by Abdulilah on 23/03/2025.
-//
-
 import NavigationKit
 
 @MainActor

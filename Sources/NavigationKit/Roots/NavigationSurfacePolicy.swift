@@ -19,7 +19,7 @@ public enum NavigationSurfaceContext: Hashable, Sendable {
 ///
 /// An empty set requests that the root be hidden from navigation chrome. The
 /// root remains in the catalog and can still be selected programmatically.
-/// Hosts may use a documented fallback where the platform cannot hide a root.
+/// Navigation views may use a documented fallback where a root cannot be hidden.
 public struct NavigationSurfaces: OptionSet, Hashable, Sendable {
     public let rawValue: Int
 

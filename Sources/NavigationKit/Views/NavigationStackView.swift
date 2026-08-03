@@ -1,11 +1,11 @@
 //
-//  NavigationStackHost.swift
+//  NavigationStackView.swift
 //  NavigationKit
 //
 
 import SwiftUI
 
-struct NavigationStackHost<Destination: Navigable>: View {
+struct NavigationStackView<Destination: Navigable>: View {
     let destination: Destination
     @Binding var path: [Destination]
 

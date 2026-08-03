@@ -1,11 +1,11 @@
 //
-//  NavigationHost.swift
+//  AdaptiveNavigationView.swift
 //  NavigationKit
 //
 
 import SwiftUI
 
-struct NavigationHost<Destination: Navigable>: View {
+struct AdaptiveNavigationView<Destination: Navigable>: View {
     let navigation: NavigationController<Destination>
 
     @ViewBuilder
@@ -13,12 +13,12 @@ struct NavigationHost<Destination: Navigable>: View {
         @Bindable var navigation = navigation
 
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, visionOS 2.0, *) {
-            ModernNavigationHost(
+            ModernNavigationView(
                 roots: navigation.roots,
                 selection: $navigation.selectedRoot
             )
         } else {
-            LegacyNavigationHost(
+            LegacyNavigationView(
                 roots: navigation.roots,
                 selection: $navigation.selectedRoot
             )

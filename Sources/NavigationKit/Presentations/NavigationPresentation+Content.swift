@@ -10,7 +10,7 @@ public extension NavigationPresentation {
     var content: some View {
         @Bindable var presentation = self
 
-        NavigationStackHost(
+        NavigationStackView(
             destination: destination,
             path: $presentation.path
         )

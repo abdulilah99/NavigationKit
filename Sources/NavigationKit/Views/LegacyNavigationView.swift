@@ -1,5 +1,5 @@
 //
-//  LegacyNavigationHost.swift
+//  LegacyNavigationView.swift
 //  NavigationKit
 //
 //  Created by Abdulilah on 03/03/2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LegacyNavigationHost<Destination: Navigable>: View {
+struct LegacyNavigationView<Destination: Navigable>: View {
     @Binding private var selection: Destination
     private let roots: [NavigationRoot<Destination>]
 
