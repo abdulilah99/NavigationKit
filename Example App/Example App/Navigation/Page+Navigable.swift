@@ -42,6 +42,10 @@ extension Page: Navigable {
         }
     }
 
+    var modifier: some ViewModifier {
+        PageModifier(titleKey: titleKey)
+    }
+
     @ViewBuilder
     var content: some View {
         switch self {

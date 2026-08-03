@@ -14,6 +14,7 @@ the state and commands behind navigation chrome that you build yourself.
 ## Capabilities
 
 - One `Navigable` type for roots, routes, sheets, and full-screen presentations.
+- One optional destination modifier applied consistently in every placement.
 - A fixed root catalog with an independent, retained path for every root.
 - Programmatic root selection, navigation, backward navigation, returning to a
   root, and complete path replacement.
@@ -116,6 +117,37 @@ enum Page: Navigable {
 `titleKey` is intentionally a `LocalizedStringKey`, so SwiftUI resolves it as
 localizable text. Destination values should encode meaningful identity:
 `.article(id: 42)` and `.article(id: 73)` are different locations.
+
+### Apply behavior to every destination view
+
+`Navigable.modifier` is the shared SwiftUI modifier for a destination. The
+default is `EmptyModifier`, so destinations only implement it when they need
+shared behavior. NavigationKit applies the modifier whenever it renders that
+destination as a root, a route, a sheet, or a full-screen presentation.
+
+For example, the destination's localizable title can be attached once instead
+of repeated in every view:
+
+```swift
+struct PageModifier: ViewModifier {
+    let titleKey: LocalizedStringKey
+
+    func body(content: Content) -> some View {
+        content.navigationTitle(titleKey)
+    }
+}
+
+extension Page {
+    var modifier: some ViewModifier {
+        PageModifier(titleKey: titleKey)
+    }
+}
+```
+
+The modifier can also install environment dependencies, toolbars, lifecycle
+behavior, accessibility metadata, or app-wide destination styling. Custom
+navigation chrome receives the same behavior when it renders
+`NavigationRoot.content` and uses `.navigationPresentations(for:)` for modals.
 
 ### Configure the roots
 
@@ -517,6 +549,7 @@ same controller. It demonstrates:
 - Repeated occurrences of the same modal destination.
 - Independent paths and navigation commands inside presentations.
 - Cascading dismissal and runtime-editable controller configuration.
+- A destination modifier that derives every navigation title from `titleKey`.
 - A focusable custom root bar on tvOS.
 - iOS, iPadOS, macOS, tvOS, and visionOS from one example target.
 

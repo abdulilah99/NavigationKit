@@ -35,6 +35,45 @@ private enum TestPage: Navigable {
     }
 }
 
+private struct TestDestinationModifier: ViewModifier {
+    let marker: Int
+
+    func body(content: Content) -> some View {
+        content
+    }
+}
+
+private struct ModifiedTestDestination: Navigable {
+    let id: Int
+
+    var titleKey: LocalizedStringKey { "Modified destination" }
+
+    var icon: Image { Image(systemName: "circle") }
+
+    var content: some View { Color.clear }
+
+    var modifier: TestDestinationModifier {
+        TestDestinationModifier(marker: id)
+    }
+}
+
+@Test
+func navigableProvidesAnEmptyModifierByDefault() {
+    let _: EmptyModifier = TestPage.home.modifier
+}
+
+@MainActor
+@Test
+func navigableSupportsDestinationSpecificModifiers() {
+    let destination = ModifiedTestDestination(id: 42)
+
+    #expect(destination.modifier.marker == 42)
+
+    // Building the shared renderer verifies that custom modifiers participate
+    // in the same view path used by roots, routes, and presentations.
+    _ = NavigationDestinationView(destination: destination).body
+}
+
 @MainActor
 private func makeController(
     selectedRoot: TestPage = .home,

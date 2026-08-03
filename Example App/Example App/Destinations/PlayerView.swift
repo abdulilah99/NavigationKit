@@ -26,6 +26,5 @@ struct PlayerView: View {
             PresentationControlsSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
-        .navigationTitle("Player \(id)")
     }
 }

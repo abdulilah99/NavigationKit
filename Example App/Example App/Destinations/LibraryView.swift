@@ -7,6 +7,5 @@ struct LibraryView: View {
         List(articleIDs, id: \.self) { id in
             NavigationLink(value: Page.article(id))
         }
-        .navigationTitle("Library")
     }
 }

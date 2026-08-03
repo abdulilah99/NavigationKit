@@ -15,7 +15,6 @@ struct SearchView: View {
         List(results, id: \.self) { id in
             NavigationLink(value: Page.article(id))
         }
-        .navigationTitle("Search")
         .searchable(text: $query, prompt: "Article number")
     }
 }

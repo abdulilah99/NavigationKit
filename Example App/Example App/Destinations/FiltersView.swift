@@ -26,6 +26,5 @@ struct FiltersView: View {
             PresentationControlsSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
-        .navigationTitle("Filters")
     }
 }

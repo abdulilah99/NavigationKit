@@ -16,6 +16,5 @@ struct ArticleView: View {
             PresentationControlsSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
-        .navigationTitle("Article \(id)")
     }
 }

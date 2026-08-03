@@ -17,6 +17,5 @@ struct HomeView: View {
             NavigationStateSection(navigation: navigation)
             PresentationStateSection(navigation: navigation)
         }
-        .navigationTitle("Home")
     }
 }

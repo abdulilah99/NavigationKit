@@ -18,6 +18,5 @@ struct SettingsView: View {
 
             NavigationStateSection(navigation: navigation)
         }
-        .navigationTitle("Settings")
     }
 }
