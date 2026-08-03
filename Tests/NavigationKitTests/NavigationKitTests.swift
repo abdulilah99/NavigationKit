@@ -57,6 +57,7 @@ private struct ModifiedTestDestination: Navigable {
     }
 }
 
+@MainActor
 @Test
 func navigableProvidesAnEmptyModifierByDefault() {
     let _: EmptyModifier = TestPage.home.modifier

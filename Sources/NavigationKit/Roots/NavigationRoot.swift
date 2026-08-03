@@ -12,7 +12,7 @@ import Observation
 ///
 /// A root adds app-owned placement and role metadata to a destination without
 /// changing the destination's identity. Root objects have stable reference
-/// identity, allowing SwiftUI to preserve their paths and view state while the
+/// identity, giving native containers a durable element identity while the
 /// selected root changes.
 @Observable
 @MainActor

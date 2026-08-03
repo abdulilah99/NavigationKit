@@ -34,10 +34,10 @@ public protocol Navigable: Identifiable, Hashable {
     /// as a root, a route, or a modal presentation. Return a custom modifier to
     /// provide behavior such as navigation titles, environment dependencies,
     /// toolbars, or lifecycle handling from one place.
-    var modifier: Modifier { get }
+    @MainActor var modifier: Modifier { get }
 }
 
 public extension Navigable where Modifier == EmptyModifier {
     /// The default modifier, which leaves the destination view unchanged.
-    var modifier: EmptyModifier { EmptyModifier() }
+    @MainActor var modifier: EmptyModifier { EmptyModifier() }
 }
