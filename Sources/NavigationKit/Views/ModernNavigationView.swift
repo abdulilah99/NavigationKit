@@ -66,7 +66,6 @@ struct ModernNavigationView<Destination: Navigable>: View {
                 #endif
             }
         }
-        .tabViewStyle(.sidebarAdaptable)
     }
 }
 
