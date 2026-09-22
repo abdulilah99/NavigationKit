@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(NavigationController<Page>.self) private var navigation
+    @Environment(ToastController<ExampleToast>.self) private var toasts
     @State private var viewMode = NavigationViewMode.native
 
     var body: some View {
@@ -11,10 +12,10 @@ struct ContentView: View {
 
             switch viewMode {
             case .native:
-                navigation.makeView()
+                navigation.makeView(toasts: toasts)
             case .custom:
                 CustomNavigationView(navigation: navigation)
-                    .navigationPresentations(for: navigation)
+                    .navigationPresentations(for: navigation, toasts: toasts)
             }
         }
     }
@@ -23,4 +24,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environment(makeExampleNavigationController())
+        .environment(ToastController<ExampleToast>())
 }

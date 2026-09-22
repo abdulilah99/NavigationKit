@@ -150,7 +150,17 @@ complete usage documentation:
 - [Navigation commands](Documentation/Guidebook/navigation-commands.md)
 - [Modal presentations](Documentation/Guidebook/presentations.md)
 - [Custom navigation views](Documentation/Guidebook/custom-navigation-views.md)
+- [Toasts](Documentation/Guidebook/toasts.md)
 - [Migrating from 0.1.x](Documentation/Guidebook/migration-to-1.0.md)
+
+## Toasts (unreleased)
+
+The current development branch also includes a typed toast engine. An app-owned
+`Toastable` enum supplies custom SwiftUI content, expiration, and placement.
+`ToastController<Toast>` maintains independent occurrences and collapsed top and
+bottom decks. Use `navigation.makeView(toasts:)` or the custom-navigation
+presentation modifier to carry those decks through native sheets and covers.
+See the [toast guide](Documentation/Guidebook/toasts.md) for the complete API.
 
 ## Example application
 

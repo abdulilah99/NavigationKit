@@ -2,6 +2,20 @@
 
 All notable changes to NavigationKit are documented here.
 
+## Unreleased
+
+### Added
+
+- App-defined `Toastable` content with default expiration, top/bottom placement,
+  semantic horizontal alignment, and optional transitions.
+- Observable `ToastController` and independent toast occurrences, including
+  explicit updates and dismissal, relative durations, fixed dates, and persistence.
+- Collapsed notification decks showing three cards by default, horizontal swipe
+  dismissal where supported, custom buttons, and configurable stack layout.
+- Toast hosting for native and custom navigation, including nested sheets and
+  covers, plus a standalone surface modifier.
+- Toast examples, lifecycle tests, UI integration tests, and a guidebook chapter.
+
 ## 1.0.0 — 2026-08-03
 
 The first stable NavigationKit release is a breaking redesign of the 0.1.x API.

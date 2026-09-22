@@ -47,6 +47,111 @@ final class NavigationKitUITests: XCTestCase {
         XCTAssertFalse(app.navigationBars["Article 10"].exists)
     }
 
+    func testToastDeckPromotesHiddenCardsAndPreservesButtons() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        XCTAssertTrue(app.staticTexts["Toast 5"].waitForExistence(timeout: 3))
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Collapsed toast deck"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        XCTAssertFalse(app.staticTexts["Toast 4"].isHittable)
+        XCTAssertEqual(app.buttons.matching(identifier: "Dismiss toast").allElementsBoundByIndex.filter(\.isEnabled).count, 1)
+
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        toastCard.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Toast 3"].waitForExistence(timeout: 3))
+        toastCard.swipeRight()
+        XCTAssertTrue(app.staticTexts["Toast 2"].waitForExistence(timeout: 3))
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 1"].waitForExistence(timeout: 3))
+        dismissToastButton.tap()
+        XCTAssertFalse(app.staticTexts["Toast 1"].exists)
+    }
+
+    func testToastOverlayPassesInputAndUpdatesExistingContent() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        tapButton(named: "Update the latest toast")
+        XCTAssertTrue(app.staticTexts["Saved"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["5 active toasts"].exists)
+        tapButton(named: "Dismiss all toasts")
+        XCTAssertTrue(app.staticTexts["0 active toasts"].exists)
+    }
+
+    func testToastDeckFollowsNativeAndCustomModalSurfaces() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        tapButton(named: "Present Article 10 as a sheet")
+        XCTAssertTrue(app.navigationBars["Article 10"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 5"].waitForExistence(timeout: 3))
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        tapButton(named: "Dismiss top presentation")
+        XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+
+        app.buttons["Custom view"].tap()
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        tapButton(named: "Present Article 10 as a sheet")
+        XCTAssertTrue(app.navigationBars["Article 10"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 3"].waitForExistence(timeout: 3))
+    }
+
+    func testToastDeckSurvivesNestedFullScreenPresentations() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        tapButton(named: "Present Player 1 full screen")
+        XCTAssertTrue(app.navigationBars["Player 1"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 5"].waitForExistence(timeout: 3))
+        tapButton(named: "Present player details")
+        XCTAssertTrue(app.navigationBars["Article 1"].waitForExistence(timeout: 3))
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        tapButton(named: "Dismiss top presentation")
+        XCTAssertTrue(app.navigationBars["Player 1"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+        tapButton(named: "Dismiss top presentation")
+        XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+    }
+
+    func testTopAndBottomDecksAreIndependent() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        tapButton(named: "Show a top error")
+        XCTAssertTrue(app.staticTexts["Upload failed"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Toast 5"].exists)
+        let topCard = app.descendants(matching: .any)
+            .matching(identifier: "toast-card")
+            .containing(.staticText, identifier: "Upload failed")
+            .firstMatch
+        topCard.buttons["Dismiss toast"].tap()
+        XCTAssertTrue(app.staticTexts["Toast 5"].exists)
+        XCTAssertTrue(app.staticTexts["5 active toasts"].exists)
+    }
+
+    private var toastCard: XCUIElement {
+        let cards = app.descendants(matching: .any).matching(identifier: "toast-card")
+        guard let front = cards.allElementsBoundByIndex.last(where: \.isHittable) else {
+            XCTFail("Expected an interactive front toast")
+            return cards.firstMatch
+        }
+        return front
+    }
+
+    private var dismissToastButton: XCUIElement {
+        let buttons = app.buttons.matching(identifier: "Dismiss toast")
+        guard let button = buttons.allElementsBoundByIndex.first(where: \.isEnabled) else {
+            XCTFail("Expected an enabled toast dismissal button")
+            return buttons.firstMatch
+        }
+        return button
+    }
+
     private func launchApp() {
         continueAfterFailure = false
 
@@ -76,16 +181,18 @@ final class NavigationKitUITests: XCTestCase {
     }
 
     private func tapButton(named name: String) {
-        let button = app.buttons[name]
+        let buttons = app.buttons.matching(identifier: name)
 
-        for _ in 0..<8 where !button.exists || !button.isHittable {
-            app.swipeUp()
+        for _ in 0..<18 {
+            if let button = buttons.allElementsBoundByIndex.first(where: \.isHittable) {
+                button.tap()
+                return
+            }
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+            start.press(forDuration: 0.01, thenDragTo: end)
         }
 
-        XCTAssertTrue(
-            button.exists && button.isHittable,
-            "Expected to find the \(name) button."
-        )
-        button.tap()
+        XCTFail("Expected to find the \(name) button.")
     }
 }
