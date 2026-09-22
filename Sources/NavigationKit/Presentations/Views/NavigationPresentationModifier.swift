@@ -5,10 +5,13 @@
 
 import SwiftUI
 
-struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
+struct NavigationPresentationModifier<Destination: Navigable, Overlay: View>: ViewModifier {
     let navigation: NavigationController<Destination>
     let index: Int
+    let overlay: Overlay
     var isEnabled = true
+
+    @State private var visibleChildID: NavigationPresentation<Destination>.ID?
 
     private var presentationID: NavigationPresentation<Destination>.ID? {
         guard isEnabled else {
@@ -51,31 +54,45 @@ struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
     func body(content: Content) -> some View {
         #if os(macOS) || os(visionOS)
         // These platforms map both semantic styles to their native sheet.
-        content.sheet(item: presentationBinding(matching: nil)) { presentation in
-            NavigationPresentationView(
-                navigation: navigation,
-                presentation: presentation,
-                index: index
-            )
-        }
+        content
+            .overlay { activeOverlay }
+            .sheet(item: presentationBinding(matching: nil)) { presentation in
+                presentationView(presentation)
+            }
         #else
         content
+            .overlay { activeOverlay }
             .sheet(item: presentationBinding(matching: .sheet)) { presentation in
-                NavigationPresentationView(
-                    navigation: navigation,
-                    presentation: presentation,
-                    index: index
-                )
+                presentationView(presentation)
             }
             .fullScreenCover(
                 item: presentationBinding(matching: .fullScreen)
             ) { presentation in
-                NavigationPresentationView(
-                    navigation: navigation,
-                    presentation: presentation,
-                    index: index
-                )
+                presentationView(presentation)
             }
         #endif
+    }
+
+    @ViewBuilder
+    private var activeOverlay: some View {
+        if visibleChildID == nil {
+            overlay
+        }
+    }
+
+    private func presentationView(_ presentation: NavigationPresentation<Destination>) -> some View {
+        NavigationPresentationView(
+            navigation: navigation,
+            presentation: presentation,
+            index: index,
+            overlay: overlay
+        )
+        .onAppear {
+            visibleChildID = presentation.id
+        }
+        .onDisappear {
+            // A late dismissal must not expose the parent beneath a replacement.
+            if visibleChildID == presentation.id { visibleChildID = nil }
+        }
     }
 }
