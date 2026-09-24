@@ -41,4 +41,16 @@ struct ToastOverlay<Toast: Toastable, ToastContent: View>: View {
     private var animation: Animation? {
         reduceMotion ? .easeOut(duration: 0.15) : configuration.animation
     }
+
+    func placed(in container: CGRect, contentBounds: CGRect?) -> some View {
+        let bounds = configuration.placement.bounds(in: container, content: contentBounds)
+        return frame(width: bounds.width, height: bounds.height)
+            .position(x: bounds.midX, y: bounds.midY)
+    }
+}
+
+extension ToastOverlay where ToastContent == Toast.Content {
+    init(toasts: ToastController<Toast>, configuration: ToastStackConfiguration) {
+        self.init(toasts: toasts, configuration: configuration) { $0.toast.content }
+    }
 }

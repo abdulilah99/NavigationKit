@@ -1,16 +1,16 @@
 # Toast engine design and research
 
 Research and repository review: 22 September 2026.
-Branch: `codex/toast-engine`, based on `0a957d5`.
+Initial baseline: `0a957d5`.
 Release: NavigationKit 1.1.0, 24 September 2026.
 See [the toast guide](Guidebook/toasts.md) for the current public API.
 
-## Existing architecture
+## Repository baseline
 
 The review covers the package sources, package tests, example application,
 existing UI tests, project configuration, README, changelog, and guidebook.
 
-| Area | Current contract | Implication for toasts |
+| Area | Contract before toast support | Implication for toasts |
 | --- | --- | --- |
 | `Navigable` | One typed destination supplies identity, label metadata, content, and an optional modifier. | Use a separate toast protocol with app-owned content and defaults. Navigation labels and path equality are unnecessary toast requirements. |
 | `NavigationController` | Concrete `@Observable`, `@MainActor` owner of roots, paths, and modal occurrences. | Give scheduling and toast mutations one explicit owner with the same concurrency model. |
@@ -24,9 +24,7 @@ existing UI tests, project configuration, README, changelog, and guidebook.
 | Verification | 37 Swift Testing tests and three existing iOS UI test methods. | Add focused lifecycle tests and real hosting checks; controller tests alone cannot establish modal visibility or touch behavior. |
 
 Baseline: `swift test --scratch-path /tmp/navigationkit-toast-build` passed all
-37 tests with Xcode 27.0. No example builds or UI tests were run during this
-research pass. Compiler cache access required execution outside the filesystem
-sandbox; the initial sandboxed attempt failed before compilation.
+37 tests with Xcode 27.0 before implementation.
 
 ## Prior work and useful lessons
 
@@ -66,7 +64,7 @@ Platform references:
 ## Selected behavior
 
 - The app defines a `Toastable` enum with content, default expiration, edge,
-  alignment, and an optional transition.
+  alignment, swipe permission, and an optional transition.
 - The implementation uses a separate `ToastController<Toast>` alongside the
   navigation controller, preserving the existing navigation generic and API.
 - Each show call creates an independent occurrence. Update/dismiss use its ID.
@@ -76,7 +74,8 @@ Platform references:
   the next two show scaled edges. The fourth and older entries remain in the
   controller and can be revealed later if they have not expired.
 - The front card's alignment places the whole deck. Swiping left or right removes
-  the front card. Normal buttons remain usable; there is no automatic tap dismissal.
+  the front card when its current `Toastable.swipeToDismiss` permits it. Normal
+  buttons remain usable; there is no automatic tap dismissal.
 - Hosting uses SwiftUI modifiers outside the main navigation UI and inside the
   recursive sheet/cover hierarchy, as requested. It does not create a new window.
 - Automatic placement keeps top banners at the container's safe top and bottom
@@ -103,18 +102,37 @@ handle front-card interactions. A small `Layout` measures the newest card and
 proposes its size to older cards, exposing a fixed strip rather than allowing a
 taller rear card to spill out. No geometry observation loop is needed.
 
-The presentation modifier passes a typed overlay-modifier factory through native
-modal layers. It only supplies visibility; `ToastPresentationModifier` owns the
-geometry and placement policy. Navigation without toasts uses `EmptyModifier`.
+Navigation and toast hosting compose through separate modifiers. `makeView()`
+installs only navigation presentation; custom navigation applies
+`.navigationPresentations(for:)` itself. An outer `.navigationToasts(for:)`
+installs a toast renderer into the environment. The renderer is a concrete value
+holding the toast controller and configuration, with a regular rendering method;
+the environment contains no rendering closures or extra mutable coordinator.
+
+Each navigation surface reads the optional internal `NavigationSurfaceOverlay`
+contract. Navigation owns native presentation and visibility, and has no toast
+controller, configuration, or toast generic parameter. Without a renderer, it
+does not construct an overlay geometry reader. SwiftUI passes the renderer to
+native child presentations. `AnyView` is confined to the overlay integration;
+the navigation content keeps its concrete type. The shared surface helper resolves
+geometry, and `ToastOverlay` applies the toast-specific placement policy.
+
 Visibility follows actual child appearance/disappearance, rather than
 assuming the requested modal-array count proves that a native child is onscreen.
 The covered parent's overlay is removed, preserving engine state and deadlines.
-Custom navigation has the same integration via the presentation modifier.
+Custom navigation has the same integration via the two separate modifiers.
+
+The revised 1.1.0 tag removes the original combined navigation/toast overloads.
+Standalone `ToastPresentationModifier` uses the same geometry helper and typed
+toast renderer directly, independently of the navigation environment integration.
 
 The active destination reports its already-inset bounds with an anchor preference.
 The host resolves that anchor in its own coordinate space without reading bar
 heights or applying safe-area insets a second time. Inactive roots do not report
 bounds, and each modal host consumes its own preference before it reaches a parent.
+Navigation without a renderer preserves the preference so a standalone outer
+toast host can still resolve the active content bounds. Only installed overlay
+hosts consume that preference.
 The selected region is constrained to the host's own bounds, retaining inherited
 safe-area and keyboard layout. Automatic placement uses the content's horizontal
 extent and bottom edge with the container's top edge. This avoids moving top
@@ -135,61 +153,44 @@ and unrelated native presentations are not automatically covered.
 
 The app's SwiftUI content owns colors, typography, shape, material, progress, and
 buttons. `ToastStackConfiguration` owns the surface placement policy, visible count, maximum width, edge insets,
-stack spacing and scale, animation, and swipe behavior. Per-show/update overrides
+stack spacing and scale, animation, and swipe threshold. Per-show/update overrides
 control individual occurrence placement and lifetime.
+
+Swipe permission belongs to `Toastable` and defaults to true. It is read from the
+current toast value rather than copied into occurrence metadata, so content
+updates can enable or disable swiping without restarting expiration. The custom
+Boolean binding modifier observes its lightweight toast value to propagate live
+permission changes through the same controller update path. Drag handling checks
+the current permission again before dismissing, including when it changes during
+a gesture. The permission controls horizontal dragging; other dismissal paths
+retain their existing behavior.
 
 Reduced Motion substitutes a short fade. Rear cards disable input and hide their
 accessibility content. tvOS retains native buttons/programmatic dismissal because
 SwiftUI drag gestures are unavailable there; the engine adds no remote navigation
 or focus interception.
 
-## Validation plan
+## Release validation
 
-- [x] Review package sources, examples, tests, docs, and representative prior work.
-- [x] Create the feature branch and establish a 37-test passing baseline.
-- [x] Implement typed occurrences, commands, independent scheduling, and callbacks.
-- [x] Add lifecycle coverage for duplicates, independent/out-of-order deadlines,
-  wall-clock changes, updates, persistence, invalid deadlines, callback reentrancy,
-  hidden occurrences, host-independent scheduling, and controller lifetime.
-- [x] Implement collapsed decks and equivalent native/custom navigation hosting.
-- [x] Add a representative example and guidebook chapter.
-- [x] Complete UI verification of front-card controls, both swipe directions,
-  promotion of hidden cards, input passing, and nested modal handoff.
-- [x] Complete builds on all declared platforms and package regression tests.
+The revised 1.1.0 snapshot passes:
 
-The 58 package tests pass. All ten original example UI scenarios have passed on iOS
-18.6 across regression and focused runs, including root navigation, custom/native
-sheet hosting, nested full-screen presentations, two independent decks, card
-promotion, gestures, safe-area placement across roots/routes/custom chrome, binding
-resets, and live content updates. The example builds for macOS, tvOS,
-and visionOS as well; those platforms have build validation, not interaction
-validation. Xcode's simulator runner occasionally failed to launch or terminated
-before a test; affected scenarios were rerun separately.
+- All 58 package tests, including independent deadlines, wall-clock changes,
+  content and permission updates, callback reentrancy, hidden occurrences,
+  binding synchronization, and controller lifetime.
+- All 17 example UI tests in one iOS 26 simulator run. Coverage includes native
+  navigation, independent navigation/toast hosting, standalone content bounds,
+  native/custom sheets, nested full-screen presentations, deck promotion,
+  keyboard clearance, safe-area placement, binding APIs, and live swipe permission.
+- Example builds for macOS, tvOS, and visionOS. These platforms have build
+  validation; their interactions have not been verified by the iOS UI suite.
+- Local documentation links and Git whitespace checks.
 
-Focused safe-area, deck gesture/promotion, and binding scenarios also pass on
-iOS 17.5, covering the minimum supported iOS generation. The original nested
-full-screen/sheet scenario was verified there during the initial engine work.
+Earlier engine validation also exercised iOS 18.6 and focused iOS 17.5 scenarios.
+The final hosting and swipe refinements were verified on iOS 26; the package
+retains its original minimum deployment targets.
 
-Initial integration checks caught empty-overlay input interception and tvOS
-`DragGesture` unavailability; both were corrected. Tests also distinguish the
-interactive front card from decorative cards still represented in XCTest's
-inspection hierarchy. Runtime evidence and final build results are recorded in
-the task rather than inferred from package compilation.
-
-Safe-area checks caught double-counted insets; the host now uses already-inset
-content bounds directly. The binding demo uses a typed destination: a sheet
-presenter attached to a lazy list row interfered with modal dismissal. Both
-ordinary dismissal and native/custom modal handoff pass after removing that
-competing presenter.
-
-The placement refinement also passes six focused iOS 26 UI scenarios: switching
-placement without resetting occurrences, native/custom modal handoff, nested
-full-screen presentations, deck promotion and gestures, placement across roots
-and custom bars, and all three binding APIs. Screenshots confirm the automatic
-top banner overlaps navigation chrome while the bottom deck clears the tab bar.
-macOS, tvOS, and visionOS builds pass after the host-modifier refactor.
-
-A follow-up keyboard UI check on iOS 26 verifies all three placement modes keep
-the complete deck above the software keyboard while typing and toast dismissal
-remain usable without dismissing the keyboard.
-The complete follow-up run passes all 12 example UI tests and all 58 package tests.
+Regression checks protect against empty-overlay input interception, double-counted
+safe-area insets, and unsupported tvOS drag gestures. UI tests target the interactive
+front card rather than decorative rear cards. The custom-content swipe test uses
+leftward gestures to avoid native back navigation when toast swiping is disabled;
+root-level enum tests cover both horizontal directions.

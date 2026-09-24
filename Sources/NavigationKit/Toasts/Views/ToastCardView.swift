@@ -22,6 +22,7 @@ struct ToastCardView<Toast: Toastable, ToastContent: View>: View {
     @State private var dismissalEdge: Edge?
 
     private var isFront: Bool { depth == 0 }
+    private var canSwipe: Bool { isFront && presentation.toast.swipeToDismiss }
     private var direction: CGFloat { presentation.edge == .top ? -1 : 1 }
 
     var body: some View {
@@ -39,7 +40,7 @@ struct ToastCardView<Toast: Toastable, ToastContent: View>: View {
                 anchor: presentation.edge == .top ? .top : .bottom
             )
             .offset(
-                x: isFront ? dragOffset : 0,
+                x: canSwipe ? dragOffset : 0,
                 y: direction * CGFloat(depth) * configuration.stackSpacing
             )
             .allowsHitTesting(isFront)
@@ -48,7 +49,7 @@ struct ToastCardView<Toast: Toastable, ToastContent: View>: View {
                 toasts.dismiss(id: presentation.id)
             }
             #if !os(tvOS)
-            .gesture(isFront && configuration.swipeToDismiss ? dismissalGesture : nil)
+            .gesture(canSwipe ? dismissalGesture : nil)
             #endif
             .transition(transition)
             .accessibilityElement(children: isFront ? .contain : .ignore)
@@ -68,12 +69,12 @@ struct ToastCardView<Toast: Toastable, ToastContent: View>: View {
     private var dismissalGesture: some Gesture {
         DragGesture(minimumDistance: 15)
             .updating($dragOffset) { value, state, _ in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                guard canSwipe, abs(value.translation.width) > abs(value.translation.height) else { return }
                 state = value.translation.width
             }
             .onEnded { value in
                 guard
-                    isFront,
+                    canSwipe,
                     toasts.presentations.last(where: { $0.edge == presentation.edge })?.id == presentation.id,
                     abs(value.translation.width) > abs(value.translation.height),
                     max(abs(value.translation.width), abs(value.predictedEndTranslation.width)) >= configuration.swipeThreshold

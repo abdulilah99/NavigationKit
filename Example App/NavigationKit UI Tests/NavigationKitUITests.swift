@@ -47,6 +47,45 @@ final class NavigationKitUITests: XCTestCase {
         XCTAssertFalse(app.navigationBars["Article 10"].exists)
     }
 
+    func testNavigationPresentationsWorkWithoutToastHosting() {
+        launchApp(arguments: ["--navigation-only"])
+        tapButton(named: "Stack five persistent toasts")
+        XCTAssertTrue(app.staticTexts["5 active toasts"].exists)
+        XCTAssertFalse(app.buttons["Dismiss toast"].exists)
+
+        tapButton(named: "Present Article 10 as a sheet")
+        XCTAssertTrue(app.navigationBars["Article 10"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["Dismiss toast"].exists)
+        tapButton(named: "Dismiss top presentation")
+        XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["Dismiss toast"].exists)
+    }
+
+    func testLocalToastsWorkWithoutNavigationToastHosting() {
+        launchApp(arguments: ["--navigation-only"])
+        tapButton(named: "Binding-based toasts")
+        XCTAssertTrue(app.navigationBars["Binding toasts"].waitForExistence(timeout: 3))
+        tapButton(named: "Show custom toast")
+        XCTAssertTrue(app.staticTexts["Custom count: 0"].waitForExistence(timeout: 3))
+        app.buttons["Increment"].tap()
+        XCTAssertTrue(app.staticTexts["Custom count: 1"].exists)
+        app.buttons["Close custom toast"].tap()
+        XCTAssertTrue(app.staticTexts["Custom binding: false"].exists)
+        XCTAssertTrue(app.staticTexts["Dismissals: 1"].exists)
+    }
+
+    func testStandaloneToastsReceiveNavigationContentBounds() {
+        launchApp(arguments: ["--standalone-toasts"])
+        tapButton(named: "Stack five persistent toasts")
+        XCTAssertTrue(app.staticTexts["Toast 5"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.tabBars.firstMatch.frame.minY - toastCard.frame.maxY, 28, accuracy: 1)
+        selectRoot(named: "Library")
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.tabBars.firstMatch.frame.minY - toastCard.frame.maxY, 28, accuracy: 1)
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 4"].waitForExistence(timeout: 3))
+    }
+
     func testToastDeckPromotesHiddenCardsAndPreservesButtons() {
         launchApp()
         tapButton(named: "Stack five persistent toasts")
@@ -81,6 +120,58 @@ final class NavigationKitUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["5 active toasts"].exists)
         tapButton(named: "Dismiss all toasts")
         XCTAssertTrue(app.staticTexts["0 active toasts"].exists)
+    }
+
+    func testToastSwipePermissionFollowsTheCurrentEnumValue() {
+        launchApp()
+        tapButton(named: "Stack five persistent toasts")
+        tapButton(named: "Show a loading toast")
+        XCTAssertTrue(app.staticTexts["Loading"].waitForExistence(timeout: 3))
+        toastCard.swipeLeft()
+        toastCard.swipeRight()
+        XCTAssertTrue(app.staticTexts["Loading"].exists)
+        XCTAssertTrue(app.staticTexts["6 active toasts"].exists)
+
+        dismissToastButton.tap()
+        XCTAssertTrue(app.staticTexts["Toast 5"].waitForExistence(timeout: 3))
+        tapButton(named: "Show a loading toast")
+        tapButton(named: "Update the latest toast")
+        XCTAssertTrue(app.staticTexts["Saved"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["6 active toasts"].exists)
+        toastCard.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Toast 5"].exists)
+        XCTAssertTrue(app.staticTexts["5 active toasts"].exists)
+    }
+
+    func testCustomToastSwipePermissionUpdatesWhilePresented() {
+        launchApp()
+        tapButton(named: "Binding-based toasts")
+        let permission = app.switches["Allow swipe dismissal"]
+        XCTAssertTrue(permission.waitForExistence(timeout: 3))
+        permission.switches.firstMatch.tap()
+        XCTAssertEqual(permission.value as? String, "0")
+        tapButton(named: "Show custom toast")
+        let card = app.otherElements["custom-toast"]
+        XCTAssertTrue(card.waitForExistence(timeout: 3))
+        // A right swipe can invoke native back navigation when toast swiping is disabled.
+        card.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Custom binding: true"].exists)
+        XCTAssertTrue(app.staticTexts["Dismissals: 0"].exists)
+
+        permission.switches.firstMatch.tap()
+        XCTAssertEqual(permission.value as? String, "1")
+        card.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Custom binding: false"].exists)
+        XCTAssertTrue(app.staticTexts["Dismissals: 1"].exists)
+
+        tapButton(named: "Show custom toast")
+        permission.switches.firstMatch.tap()
+        XCTAssertEqual(permission.value as? String, "0")
+        card.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Custom binding: true"].exists)
+        app.buttons["Close custom toast"].tap()
+        XCTAssertTrue(app.staticTexts["Custom binding: false"].exists)
+        XCTAssertTrue(app.staticTexts["Dismissals: 2"].exists)
     }
 
     func testToastDeckFollowsNativeAndCustomModalSurfaces() {
@@ -268,10 +359,11 @@ final class NavigationKitUITests: XCTestCase {
         return button
     }
 
-    private func launchApp() {
+    private func launchApp(arguments: [String] = []) {
         continueAfterFailure = false
 
         app = XCUIApplication()
+        app.launchArguments = arguments
         app.launch()
     }
 

@@ -35,6 +35,10 @@ struct ToastControlsSection: View {
                 toasts.show(.message(number), expiration: .at(.now.addingTimeInterval(8)), alignment: .trailing)
             }
 
+            Button("Show a loading toast") {
+                toasts.show(.loading)
+            }
+
             Button("Update the latest toast") {
                 if let toast = toasts.presentations.last {
                     toasts.update(id: toast.id, with: .saved, expiration: .after(.seconds(3)))

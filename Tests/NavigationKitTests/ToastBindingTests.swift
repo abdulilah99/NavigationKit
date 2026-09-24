@@ -4,6 +4,7 @@ import Testing
 
 private struct BindingTestToast: Toastable {
     var expiration: ToastExpiration = .never
+    var swipeToDismiss = true
     var content: some View { Text("Bound toast") }
 }
 
@@ -34,11 +35,13 @@ func boundToastUpdatesPreserveDeadlineAndUseLatestBindingReset() throws {
     let state = ToastBindingState(toasts: ToastController<BindingTestToast>(clock: clock))
     var oldReset = false
     var newReset = false
-    state.synchronize(.init(expiration: .after(.seconds(4))), resetBinding: { oldReset = true }, onDismiss: nil)
+    state.synchronize(.init(expiration: .after(.seconds(4)), swipeToDismiss: false), resetBinding: { oldReset = true }, onDismiss: nil)
     let first = try #require(state.toasts.presentations.first)
+    #expect(!first.toast.swipeToDismiss)
     now = now.advanced(by: .seconds(2))
     state.synchronize(.init(expiration: .never), resetBinding: { newReset = true }, onDismiss: nil)
     #expect(state.toasts.presentations.first?.id == first.id)
+    #expect(first.toast.swipeToDismiss)
     now = now.advanced(by: .seconds(2))
     state.toasts.removeExpiredToasts()
     #expect(state.toasts.presentations.isEmpty)

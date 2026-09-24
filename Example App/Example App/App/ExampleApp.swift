@@ -8,9 +8,18 @@ struct ExampleApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(navigation)
-                .environment(toasts)
+            Group {
+                if ProcessInfo.processInfo.arguments.contains("--navigation-only") {
+                    navigation.makeView()
+                } else if ProcessInfo.processInfo.arguments.contains("--standalone-toasts") {
+                    navigation.makeView()
+                        .toastPresentations(for: toasts)
+                } else {
+                    ContentView()
+                }
+            }
+            .environment(navigation)
+            .environment(toasts)
         }
     }
 }

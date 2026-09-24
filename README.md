@@ -156,10 +156,24 @@ complete usage documentation:
 ## Toasts
 
 NavigationKit 1.1 includes a typed toast engine. An app-owned
-`Toastable` enum supplies custom SwiftUI content, expiration, and placement.
+`Toastable` enum supplies custom SwiftUI content, expiration, placement, and swipe permission.
 `ToastController<Toast>` maintains independent occurrences and collapsed top and
-bottom decks. Use `navigation.makeView(toasts:)` or the custom-navigation
-presentation modifier to carry those decks through native sheets and covers.
+bottom decks. Add `.navigationToasts(for:)`
+after `navigation.makeView()` or `.navigationPresentations(for:)` to carry those
+decks through native sheets and covers:
+
+```swift
+navigation.makeView()
+    .navigationToasts(for: toasts)
+
+CustomNavigationView(navigation: navigation)
+    .navigationPresentations(for: navigation)
+    .navigationToasts(for: toasts)
+```
+
+Navigation and toast hosting are independent. If you used the original 1.1.0 tag,
+see the API changes in the [changelog](CHANGELOG.md).
+
 For a screen-owned toast, use `.toast(isPresented:content:)` with a custom view
 or `.toast(isPresented:toast:)` with an enum value. Use `.toast(item:)` when the
 enum is stored in an optional binding. Both enum forms require `Toastable & Equatable`.

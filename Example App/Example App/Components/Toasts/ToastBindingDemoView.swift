@@ -13,6 +13,7 @@ struct ToastBindingDemoView: View {
     @State private var showsEnumToast = false
     @State private var toast: ExampleToast?
     @State private var expiresAutomatically = false
+    @State private var allowsSwipeDismissal = true
     @State private var count = 0
     @State private var dismissals = 0
 
@@ -28,6 +29,7 @@ struct ToastBindingDemoView: View {
             List {
                 Section("Custom content") {
                     Toggle("Expire automatically", isOn: $expiresAutomatically)
+                    Toggle("Allow swipe dismissal", isOn: $allowsSwipeDismissal)
                     Button("Show custom toast") { showsToast = true }
                     Button("Hide custom toast") { showsToast = false }
                     Text(showsToast ? "Custom binding: true" : "Custom binding: false")
@@ -53,6 +55,7 @@ struct ToastBindingDemoView: View {
         .toast(
             isPresented: $showsToast,
             expiration: expiresAutomatically ? .after(.seconds(2)) : .never,
+            swipeToDismiss: allowsSwipeDismissal,
             onDismiss: { dismissals += 1 }
         ) {
             HStack {
@@ -62,6 +65,7 @@ struct ToastBindingDemoView: View {
             }
             .padding()
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("custom-toast")
         }
         .toast(item: $toast, onDismiss: { dismissals += 1 })

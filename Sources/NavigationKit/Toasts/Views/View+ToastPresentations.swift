@@ -10,7 +10,7 @@ import SwiftUI
 public extension View {
     /// Overlays top and bottom toast decks on this view's surface.
     /// Install inside app-owned sheets as well when they need to display toasts.
-    /// NavigationKit's `navigationPresentations(for:toasts:)` does this recursively.
+    /// Use `.navigationToasts(for:)` for automatic hosting across NavigationKit surfaces.
     func toastPresentations<Toast: Toastable>(
         for toasts: ToastController<Toast>,
         configuration: ToastStackConfiguration = .init()

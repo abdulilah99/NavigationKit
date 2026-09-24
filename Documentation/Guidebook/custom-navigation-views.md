@@ -31,6 +31,10 @@ Apply `.navigationPresentations(for:)` exactly once around a custom navigation
 view so the controller's nested modal stack can be displayed. `makeView()`
 already applies this modifier and does not need it again.
 
+Toast hosting is an independent opt-in. Add `.navigationToasts(for: toasts)`
+after the presentation modifier to render decks on the root and its presented
+surfaces. See [Toasts](toasts.md) for configuration and standalone hosting.
+
 ## Build custom root controls
 
 The controller exposes stable, `Identifiable` root objects, so custom controls

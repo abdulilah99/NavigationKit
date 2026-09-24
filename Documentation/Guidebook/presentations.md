@@ -127,3 +127,7 @@ inspect occurrence IDs, destinations, styles, or paths.
 
 `makeView()` installs presentation rendering automatically. Custom navigation
 views must apply `.navigationPresentations(for:)` once around their content.
+
+This modifier owns native modal presentation. Add `.navigationToasts(for:)`
+after it to enable toast rendering on those surfaces independently; see
+[Toasts](toasts.md). Toasts are optional and use their own controller.

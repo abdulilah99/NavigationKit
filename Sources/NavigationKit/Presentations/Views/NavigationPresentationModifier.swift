@@ -5,12 +5,12 @@
 
 import SwiftUI
 
-struct NavigationPresentationModifier<Destination: Navigable, Overlay: ViewModifier>: ViewModifier {
+struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
     let navigation: NavigationController<Destination>
     let index: Int
-    let makeOverlay: (Bool) -> Overlay
     var isEnabled = true
 
+    @Environment(\.navigationSurfaceOverlay) private var surfaceOverlay
     @State private var visibleChildID: NavigationPresentation<Destination>.ID?
 
     private var presentationID: NavigationPresentation<Destination>.ID? {
@@ -52,16 +52,24 @@ struct NavigationPresentationModifier<Destination: Navigable, Overlay: ViewModif
     }
 
     func body(content: Content) -> some View {
+        let surface = content.navigationSurfaceOverlay(
+            isEnabled: visibleChildID == nil && surfaceOverlay != nil
+        ) { container, contentBounds in
+            surfaceOverlay?.makeView(in: container, contentBounds: contentBounds)
+        }
+        .transformPreference(NavigationContentBoundsKey.self) {
+            // Without a renderer, leave these bounds available to standalone hosts.
+            if surfaceOverlay != nil { $0 = nil }
+        }
+
         #if os(macOS) || os(visionOS)
         // These platforms map both semantic styles to their native sheet.
-        content
-            .modifier(makeOverlay(visibleChildID == nil))
+        surface
             .sheet(item: presentationBinding(matching: nil)) { presentation in
                 presentationView(presentation)
             }
         #else
-        content
-            .modifier(makeOverlay(visibleChildID == nil))
+        surface
             .sheet(item: presentationBinding(matching: .sheet)) { presentation in
                 presentationView(presentation)
             }
@@ -77,8 +85,7 @@ struct NavigationPresentationModifier<Destination: Navigable, Overlay: ViewModif
         NavigationPresentationView(
             navigation: navigation,
             presentation: presentation,
-            index: index,
-            makeOverlay: makeOverlay
+            index: index
         )
         .onAppear {
             visibleChildID = presentation.id

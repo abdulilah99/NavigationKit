@@ -25,7 +25,6 @@ public struct ToastStackConfiguration {
     public let scaleStep: CGFloat
     public let insets: EdgeInsets
     public let animation: Animation?
-    public let swipeToDismiss: Bool
     public let swipeThreshold: CGFloat
     public let placement: Placement
 
@@ -36,7 +35,6 @@ public struct ToastStackConfiguration {
         scaleStep: CGFloat = 0.05,
         insets: EdgeInsets = EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16),
         animation: Animation? = .spring(duration: 0.3, bounce: 0.15),
-        swipeToDismiss: Bool = true,
         swipeThreshold: CGFloat = 60,
         placement: Placement = .automatic
     ) {
@@ -52,8 +50,29 @@ public struct ToastStackConfiguration {
         self.scaleStep = scaleStep
         self.insets = insets
         self.animation = animation
-        self.swipeToDismiss = swipeToDismiss
         self.swipeThreshold = swipeThreshold
         self.placement = placement
+    }
+}
+
+extension ToastStackConfiguration.Placement {
+    func bounds(in container: CGRect, content: CGRect?) -> CGRect {
+        guard self != .container, let content else { return container }
+        let visibleContent = container.intersection(content)
+        guard !visibleContent.isEmpty else { return container }
+
+        switch self {
+        case .automatic:
+            return CGRect(
+                x: visibleContent.minX,
+                y: container.minY,
+                width: visibleContent.width,
+                height: visibleContent.maxY - container.minY
+            )
+        case .content:
+            return visibleContent
+        case .container:
+            return container
+        }
     }
 }

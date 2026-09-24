@@ -16,17 +16,4 @@ public extension NavigationController {
         AdaptiveNavigationView(navigation: self)
             .navigationPresentations(for: self)
     }
-
-    /// Creates native navigation with toast decks above roots, routes, and native modals.
-    func makeView<Toast: Toastable>(
-        toasts: ToastController<Toast>,
-        toastConfiguration: ToastStackConfiguration = .init()
-    ) -> some View {
-        AdaptiveNavigationView(navigation: self)
-            .navigationPresentations(
-                for: self,
-                toasts: toasts,
-                toastConfiguration: toastConfiguration
-            )
-    }
 }

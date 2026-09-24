@@ -23,10 +23,12 @@ struct ContentView: View {
 
             switch viewMode {
             case .native:
-                navigation.makeView(toasts: toasts, toastConfiguration: .init(placement: toastPlacement))
+                navigation.makeView()
+                    .navigationToasts(for: toasts, configuration: .init(placement: toastPlacement))
             case .custom:
                 CustomNavigationView(navigation: navigation)
-                    .navigationPresentations(for: navigation, toasts: toasts, toastConfiguration: .init(placement: toastPlacement))
+                    .navigationPresentations(for: navigation)
+                    .navigationToasts(for: toasts, configuration: .init(placement: toastPlacement))
             }
         }
     }

@@ -5,25 +5,43 @@ All notable changes to NavigationKit are documented here.
 ## 1.1.0 — 2026-09-24
 
 Adds a typed toast engine and SwiftUI-style presentation APIs while preserving
-the existing navigation API and minimum platform versions.
+the 1.0 navigation API and minimum platform versions.
 
 ### Added
 
 - App-defined `Toastable` content with default expiration, top/bottom placement,
-  semantic horizontal alignment, and optional transitions.
+  semantic horizontal alignment, per-toast swipe permission, and optional transitions.
 - Observable `ToastController` and independent toast occurrences, including
   explicit updates and dismissal, relative durations, fixed dates, and persistence.
 - Collapsed notification decks showing three cards by default, horizontal swipe
   dismissal where supported, custom buttons, and configurable stack layout.
-- Toast hosting for native and custom navigation, including nested sheets and
-  covers, plus a standalone surface modifier.
+- Independent `.navigationToasts(for:configuration:)` hosting for native and custom
+  navigation, including nested sheets and covers. Compose it after `makeView()` or
+  `.navigationPresentations(for:)` to keep navigation and toast setup separate.
+- Standalone `.toastPresentations(for:)` hosting and binding-based `.toast` modifiers
+  that work without navigation-wide toast hosting.
 - Toast examples, lifecycle tests, UI integration tests, and a guidebook chapter.
 - SwiftUI-style `.toast(isPresented:content:)`, `.toast(isPresented:toast:)`, and
   `.toast(item:)` presentation, with binding synchronization on dismissal and expiry.
+- Live `Toastable.swipeToDismiss` permission, defaulting to `true`, and the equivalent
+  Boolean option for custom-content `.toast` presentation. Permission updates preserve
+  occurrence identity and expiration; swipe threshold and animation are shared stack configuration.
 - A toast placement choice: automatic (top at the container edge, bottom above
   navigation controls), container edges, or active content bounds.
 - Toast hosts use the active destination's bounds to follow native and custom
   navigation chrome without hard-coded bar heights or double-counted safe areas.
+
+### Revision of the original 1.1.0 tag
+
+This revision replaces the initial 1.1.0 implementation. Existing 1.0 navigation
+APIs remain unchanged. Code using the original 1.1.0 toast APIs needs these updates:
+
+- Replace `makeView(toasts:toastConfiguration:)` and
+  `.navigationPresentations(for:toasts:toastConfiguration:)` with the navigation-only
+  call followed by `.navigationToasts(for:configuration:)`.
+- Move `ToastStackConfiguration.swipeToDismiss` to `Toastable.swipeToDismiss` or the
+  custom-content `.toast` modifier. The combined hosting overloads and stack-wide
+  permission have been removed.
 
 ## 1.0.0 — 2026-08-03
 

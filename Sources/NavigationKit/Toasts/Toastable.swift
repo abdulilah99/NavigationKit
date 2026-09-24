@@ -16,6 +16,8 @@ public protocol Toastable {
     var expiration: ToastExpiration { get }
     var edge: VerticalEdge { get }
     var alignment: ToastAlignment { get }
+    /// Allows horizontal swipe dismissal. Updating the toast updates this permission immediately.
+    var swipeToDismiss: Bool { get }
     /// An optional custom transition. `nil` slides from the occurrence's resolved edge.
     var transition: AnyTransition? { get }
 }
@@ -24,6 +26,7 @@ public extension Toastable {
     var expiration: ToastExpiration { .after(.seconds(4)) }
     var edge: VerticalEdge { .bottom }
     var alignment: ToastAlignment { .center }
+    var swipeToDismiss: Bool { true }
     var transition: AnyTransition? { nil }
 }
 

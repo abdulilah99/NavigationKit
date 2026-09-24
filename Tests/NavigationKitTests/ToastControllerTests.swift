@@ -4,8 +4,16 @@ import Testing
 
 private enum TestToast: Toastable {
     case message(Int)
+    case loading
 
     var content: some View { Text("Toast") }
+
+    var swipeToDismiss: Bool {
+        switch self {
+        case .loading: false
+        case .message: true
+        }
+    }
 }
 
 @MainActor
@@ -96,7 +104,8 @@ func fixedDatesWaitWhenTheWallClockMovesBackward() throws {
 func updatingContentPreservesOccurrencePlacementAndDeadline() throws {
     let time = ToastTestTime()
     let toasts = ToastController<TestToast>(clock: time.clock)
-    let toast = try #require(toasts.show(.message(1), edge: .top, alignment: .trailing))
+    let toast = try #require(toasts.show(.loading, edge: .top, alignment: .trailing))
+    #expect(!toast.toast.swipeToDismiss)
     let deadline = toast.expiresAt
     time.advance(seconds: 2)
     toasts.update(id: toast.id, with: .message(2))
@@ -105,6 +114,7 @@ func updatingContentPreservesOccurrencePlacementAndDeadline() throws {
     #expect(toast.edge == .top)
     #expect(toast.alignment == .trailing)
     #expect(toast.expiresAt == deadline)
+    #expect(toast.toast.swipeToDismiss)
     guard case .message(2) = toast.toast else {
         Issue.record("Expected updated content")
         return

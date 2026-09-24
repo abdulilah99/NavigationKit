@@ -7,8 +7,9 @@ toasts; additional occurrences remain in the controller and may become visible
 as newer ones leave.
 
 Top and bottom have separate decks. Each deck uses its front toast's horizontal
-alignment. Only the front card is interactive. Swipe it left or right to dismiss
-it on platforms supporting drag gestures, or use buttons in your custom content.
+alignment. Only the front card is interactive. When its `swipeToDismiss` permits
+it, swipe left or right to dismiss on platforms supporting drag gestures, or use
+buttons in your custom content.
 Tapping the card does not automatically dismiss it.
 
 ## Define your toast content
@@ -19,11 +20,13 @@ Tapping the card does not automatically dismiss it.
 ```swift
 enum AppToast: Toastable {
     case error(title: LocalizedStringResource, message: LocalizedStringResource)
+    case loading
     case saved
 
     var expiration: ToastExpiration {
         switch self {
         case .error: .after(.seconds(8))
+        case .loading: .never
         case .saved: .after(.seconds(3))
         }
     }
@@ -31,7 +34,14 @@ enum AppToast: Toastable {
     var edge: VerticalEdge {
         switch self {
         case .error: .top
-        case .saved: .bottom
+        case .loading, .saved: .bottom
+        }
+    }
+
+    var swipeToDismiss: Bool {
+        switch self {
+        case .loading: false
+        case .error, .saved: true
         }
     }
 
@@ -42,6 +52,8 @@ enum AppToast: Toastable {
             ErrorToastView(title: title, message: message)
         case .saved:
             SavedToastView()
+        case .loading:
+            LoadingToastView()
         }
     }
 }
@@ -52,6 +64,12 @@ Only `content` is required. Defaults are `.after(.seconds(4))`, `.bottom`,
 `alignment` with `.leading` or `.trailing`, or return a custom `AnyTransition?`
 from `transition`. Returning `nil` uses the default transition. Reduce Motion
 uses a short fade instead of the configured movement.
+
+`swipeToDismiss` defaults to `true` and belongs to the current toast value.
+Updating a loading toast to a success toast immediately adopts the success
+case's swipe permission without changing its identity, placement, or deadline.
+This controls horizontal drag dismissal only; close buttons, the accessibility
+escape action, explicit controller dismissal, and expiration still work.
 
 Content owns its typography, colors, shape, materials, progress, and controls.
 Prefer content that sizes naturally and fits the available surface. Rear cards
@@ -69,20 +87,35 @@ can read it through SwiftUI's type-based environment:
 @State private var toasts = ToastController<AppToast>()
 
 // At the navigation boundary:
-navigation.makeView(toasts: toasts)
+navigation.makeView()
+    .navigationToasts(for: toasts)
     .environment(toasts)
 
 // In descendant views:
 @Environment(ToastController<AppToast>.self) private var toasts
 ```
 
-For custom navigation, use the equivalent presentation modifier once:
+For custom navigation, compose the two responsibilities explicitly:
 
 ```swift
 CustomNavigationView(navigation: navigation)
-    .navigationPresentations(for: navigation, toasts: toasts)
+    .navigationPresentations(for: navigation)
+    .navigationToasts(for: toasts)
     .environment(toasts)
 ```
+
+Apply `.navigationToasts` after the navigation presentation modifier (or outside
+the view containing it). Its renderer travels through the SwiftUI environment to
+each navigation surface. It does not install sheets or change navigation state.
+Install it once for a navigation tree; the nearest installation configures that
+tree's surfaces. `.navigationPresentations(for:)` works independently when no
+toast renderer is installed.
+
+If you used the original 1.1.0 tag, replace `makeView(toasts: toasts, toastConfiguration: style)`
+with `makeView().navigationToasts(for: toasts, configuration: style)`. Replace
+`.navigationPresentations(for: navigation, toasts: toasts, toastConfiguration: style)`
+with `.navigationPresentations(for: navigation).navigationToasts(for: toasts, configuration: style)`.
+The revised 1.1.0 tag removes the combined overloads; see the [changelog](../../CHANGELOG.md).
 
 The root host sits outside the navigation stacks. By default, top toasts sit at
 the container's safe top edge and may overlap the navigation bar; bottom toasts
@@ -102,8 +135,9 @@ content.toastPresentations(for: toasts)
 
 This modifier renders in the surface to which it is attached; it does not create
 a separate window or automatically modify unrelated sheets, popovers, or system
-alerts. Do not also install it on navigation that already uses the integrated
-toast overload. When manually installing multiple hosts, the app controls which
+alerts. Use it for standalone surfaces; `.navigationToasts` needs a NavigationKit
+presentation host beneath it. Do not install both hosts on the same navigation
+surface. When manually installing multiple standalone hosts, the app controls which
 hosts are visible.
 
 For independent windows, create a controller in each window's root view. Sharing
@@ -134,9 +168,16 @@ NavigationStack {
 }
 ```
 
-The custom-content form also accepts `edge`, `alignment`, `configuration`, and
-`onDismiss`. Its content updates with the presenting view's state. Expiration
-and placement are resolved when the binding becomes true.
+The custom-content form also accepts `edge`, `alignment`, `swipeToDismiss`,
+`configuration`, and `onDismiss`. Content and swipe permission update with the
+presenting view's state. Expiration and placement are resolved when the binding
+becomes true; changing swipe permission does not restart that lifetime.
+
+```swift
+content.toast(isPresented: $showsProgress, swipeToDismiss: false) {
+    ProgressToastView()
+}
+```
 
 A local modifier cannot extend beyond its attached container to cover a native
 navigation bar. Use the integrated navigation host for banners that span the
@@ -289,17 +330,21 @@ let style = ToastStackConfiguration(
     scaleStep: 0.06,
     insets: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20),
     animation: .spring(duration: 0.35),
-    swipeToDismiss: true,
     swipeThreshold: 70,
     placement: .automatic
 )
 
-navigation.makeView(toasts: toasts, toastConfiguration: style)
+navigation.makeView()
+    .navigationToasts(for: toasts, configuration: style)
 ```
 
-The same configuration is accepted by the custom-navigation overload,
+The same configuration is accepted by `.navigationToasts(for:configuration:)`,
 `.toastPresentations(for:configuration:)`, and all `.toast` binding modifiers.
 Maximum visible count changes rendering only; it does not discard hidden occurrences.
+Swipe distance and animation are shared configuration, while each toast owns its
+swipe permission. To migrate the old `ToastStackConfiguration.swipeToDismiss`
+setting, implement `Toastable.swipeToDismiss` or pass the custom-content
+`.toast(isPresented:swipeToDismiss:content:)` argument.
 
 | Placement | Top deck | Bottom deck |
 | --- | --- | --- |

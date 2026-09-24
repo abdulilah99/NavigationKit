@@ -40,6 +40,7 @@ struct ToastBooleanModifier<ToastContent: View>: ViewModifier {
     let expiration: ToastExpiration
     let edge: VerticalEdge
     let alignment: ToastAlignment
+    let swipeToDismiss: Bool
     let configuration: ToastStackConfiguration
     let onDismiss: (() -> Void)?
     @ViewBuilder let toastContent: () -> ToastContent
@@ -47,16 +48,22 @@ struct ToastBooleanModifier<ToastContent: View>: ViewModifier {
     @State private var presentation = ToastBindingState<ViewToast>()
 
     func body(content: Content) -> some View {
+        let toast = isPresented ? ViewToast(
+            expiration: expiration,
+            edge: edge,
+            alignment: alignment,
+            swipeToDismiss: swipeToDismiss
+        ) : nil
+
         content
             .modifier(
                 ToastPresentationModifier(toasts: presentation.toasts, configuration: configuration) { _ in
                     toastContent()
                 }
             )
-            .onChange(of: isPresented, initial: true) { _, value in
+            .onChange(of: toast, initial: true) { _, value in
                 let binding = $isPresented
-                let toast = value ? ViewToast(expiration: expiration, edge: edge, alignment: alignment) : nil
-                presentation.synchronize(toast, resetBinding: {
+                presentation.synchronize(value, resetBinding: {
                     binding.wrappedValue = false
                 }, onDismiss: onDismiss)
             }
@@ -64,9 +71,10 @@ struct ToastBooleanModifier<ToastContent: View>: ViewModifier {
     }
 }
 
-private struct ViewToast: Toastable {
+private struct ViewToast: Toastable, Equatable {
     let expiration: ToastExpiration
     let edge: VerticalEdge
     let alignment: ToastAlignment
+    let swipeToDismiss: Bool
     var content: some View { EmptyView() }
 }
