@@ -45,7 +45,7 @@ Add NavigationKit with Xcode's package dependency interface, or declare it in
 ```swift
 .package(
     url: "https://github.com/abdulilah99/NavigationKit.git",
-    from: "1.1.0"
+    from: "1.1.1"
 )
 ```
 

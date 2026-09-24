@@ -131,3 +131,9 @@ views must apply `.navigationPresentations(for:)` once around their content.
 This modifier owns native modal presentation. Add `.navigationToasts(for:)`
 after it to enable toast rendering on those surfaces independently; see
 [Toasts](toasts.md). Toasts are optional and use their own controller.
+
+The presenting layout direction is explicitly forwarded to each native modal,
+including nested sheets, covers, and toast overlays. For an app-level language
+override, apply `.environment(\.layoutDirection, ...)` outside `makeView()` or
+`.navigationPresentations(for:)` so the presentation host receives it. An override
+inside a destination's content only affects that destination's subtree.

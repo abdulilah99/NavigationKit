@@ -11,6 +11,7 @@ struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
     var isEnabled = true
 
     @Environment(\.navigationSurfaceOverlay) private var surfaceOverlay
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var visibleChildID: NavigationPresentation<Destination>.ID?
 
     private var presentationID: NavigationPresentation<Destination>.ID? {
@@ -87,6 +88,8 @@ struct NavigationPresentationModifier<Destination: Navigable>: ViewModifier {
             presentation: presentation,
             index: index
         )
+        // Native presentation boundaries can reset an app-level direction override.
+        .environment(\.layoutDirection, layoutDirection)
         .onAppear {
             visibleChildID = presentation.id
         }

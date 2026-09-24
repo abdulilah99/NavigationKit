@@ -8,18 +8,30 @@ struct ExampleApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if ProcessInfo.processInfo.arguments.contains("--navigation-only") {
-                    navigation.makeView()
-                } else if ProcessInfo.processInfo.arguments.contains("--standalone-toasts") {
-                    navigation.makeView()
-                        .toastPresentations(for: toasts)
-                } else {
-                    ContentView()
-                }
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--presentation-direction") {
+                PresentationDirectionFixture(rightToLeft: ProcessInfo.processInfo.arguments.contains("--rtl"))
+            } else {
+                exampleContent
             }
-            .environment(navigation)
-            .environment(toasts)
+            #else
+            exampleContent
+            #endif
         }
+    }
+
+    private var exampleContent: some View {
+        Group {
+            if ProcessInfo.processInfo.arguments.contains("--navigation-only") {
+                navigation.makeView()
+            } else if ProcessInfo.processInfo.arguments.contains("--standalone-toasts") {
+                navigation.makeView()
+                    .toastPresentations(for: toasts)
+            } else {
+                ContentView()
+            }
+        }
+        .environment(navigation)
+        .environment(toasts)
     }
 }

@@ -2,6 +2,14 @@
 
 All notable changes to NavigationKit are documented here.
 
+## 1.1.1 — 2026-09-24
+
+### Fixed
+
+- Native sheets and full-screen covers explicitly preserve the presenting layout
+  direction, including nested presentations and their toast overlays. This fixes
+  app-level RTL overrides reverting to LTR at a native presentation boundary.
+
 ## 1.1.0 — 2026-09-24
 
 Adds a typed toast engine and SwiftUI-style presentation APIs while preserving
