@@ -2,7 +2,10 @@
 
 All notable changes to NavigationKit are documented here.
 
-## Unreleased
+## 1.1.0 — 2026-09-24
+
+Adds a typed toast engine and SwiftUI-style presentation APIs while preserving
+the existing navigation API and minimum platform versions.
 
 ### Added
 
@@ -15,6 +18,12 @@ All notable changes to NavigationKit are documented here.
 - Toast hosting for native and custom navigation, including nested sheets and
   covers, plus a standalone surface modifier.
 - Toast examples, lifecycle tests, UI integration tests, and a guidebook chapter.
+- SwiftUI-style `.toast(isPresented:content:)`, `.toast(isPresented:toast:)`, and
+  `.toast(item:)` presentation, with binding synchronization on dismissal and expiry.
+- A toast placement choice: automatic (top at the container edge, bottom above
+  navigation controls), container edges, or active content bounds.
+- Toast hosts use the active destination's bounds to follow native and custom
+  navigation chrome without hard-coded bar heights or double-counted safe areas.
 
 ## 1.0.0 — 2026-08-03
 

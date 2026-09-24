@@ -3,8 +3,8 @@
 NavigationKit includes a typed toast engine with independent expiration and
 collapsed notification decks. The newest toast is the front card. Two older
 cards show scaled edges behind it by default, above top toasts and below bottom
-toasts; additional occurrences remain in
-the controller and may become visible as newer ones leave.
+toasts; additional occurrences remain in the controller and may become visible
+as newer ones leave.
 
 Top and bottom have separate decks. Each deck uses its front toast's horizontal
 alignment. Only the front card is interactive. Swipe it left or right to dismiss
@@ -84,8 +84,13 @@ CustomNavigationView(navigation: navigation)
     .environment(toasts)
 ```
 
-The root host sits outside the navigation stacks and chrome. Native sheets and
-full-screen covers receive the same overlay, and the parent host is hidden
+The root host sits outside the navigation stacks. By default, top toasts sit at
+the container's safe top edge and may overlap the navigation bar; bottom toasts
+clear the active destination's tab bar or bottom toolbar. This keeps top banners
+stable as navigation titles expand or collapse. Custom navigation built from
+`root.content` reports the same bounds, so a custom root bar outside that content
+remains clear too. The placement policy is configurable below.
+Native sheets and full-screen covers receive the same overlay, and the parent host is hidden
 while its presented child is visible. Toast identity and deadlines persist
 through that handoff. Toast placement inside a sheet is relative to the sheet.
 
@@ -103,6 +108,82 @@ hosts are visible.
 
 For independent windows, create a controller in each window's root view. Sharing
 one controller deliberately shares its toast state among those windows.
+
+## Present from a binding
+
+For a toast owned by one screen, use the SwiftUI-style `.toast` modifiers. They
+create their own local controller; no controller setup or environment injection
+is needed. Their container is the view you attach them to. Attaching inside
+native navigation/tab containers inherits the screen's content safe area:
+
+```swift
+@State private var showsSaved = false
+
+NavigationStack {
+    Form {
+        Button("Save") { showsSaved = true }
+    }
+    .toast(isPresented: $showsSaved, expiration: .after(.seconds(3))) {
+        HStack {
+            Text("Saved")
+            Button("Close") { showsSaved = false }
+        }
+        .padding()
+        .background(.regularMaterial, in: Capsule())
+    }
+}
+```
+
+The custom-content form also accepts `edge`, `alignment`, `configuration`, and
+`onDismiss`. Its content updates with the presenting view's state. Expiration
+and placement are resolved when the binding becomes true.
+
+A local modifier cannot extend beyond its attached container to cover a native
+navigation bar. Use the integrated navigation host for banners that span the
+navigation surface and follow its modal presentations.
+
+An enum can supply its own view and defaults:
+
+```swift
+// Add Equatable to the app's Toastable enum for binding change detection.
+@State private var toast: AppToast?
+
+content
+    .toast(item: $toast, onDismiss: { /* presentation ended */ })
+
+// Present:
+toast = .saved
+```
+
+To control that same enum with a Boolean instead of an optional value, use:
+
+```swift
+@State private var showsSaved = false
+
+content.toast(isPresented: $showsSaved, toast: AppToast.saved)
+```
+
+This form uses the enum's content, expiration, placement, and transition, and
+also accepts `configuration` and `onDismiss`. Dismissal or expiry sets
+`showsSaved` back to `false`.
+
+Both enum forms require `Toastable & Equatable`, without an `Identifiable`
+requirement. Changing the enum value while presented updates the occurrence's
+content while preserving its deadline and placement. Clear the optional binding
+or set the Boolean to `false` before starting a new occurrence with different
+defaults. Enum content receives the local typed
+controller and occurrence in the environment, just like controller-hosted toasts.
+
+Swipe dismissal or expiration resets the binding to `false`/`nil`. Clearing the
+binding dismisses the occurrence. `onDismiss` runs once after logical dismissal,
+including when the presenting view disappears; it does not wait for the exit
+animation. Invalid initial expiration clears the binding without calling
+`onDismiss`, since no toast was presented.
+
+Each modifier owns one local occurrence. Use the controller API for a shared
+stack of simultaneous occurrences that survives navigation and follows native
+modal presentations. Local modifiers render on their attached surface and do
+not automatically move into unrelated sheets.
 
 ## Show, update, and dismiss
 
@@ -209,13 +290,27 @@ let style = ToastStackConfiguration(
     insets: EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20),
     animation: .spring(duration: 0.35),
     swipeToDismiss: true,
-    swipeThreshold: 70
+    swipeThreshold: 70,
+    placement: .automatic
 )
 
 navigation.makeView(toasts: toasts, toastConfiguration: style)
 ```
 
-The same configuration is accepted by the custom-navigation overload and by
-`.toastPresentations(for:configuration:)`. Maximum visible count changes
-rendering only; it does not discard hidden occurrences. Insets are relative to
-the host's safe layout area, including its native keyboard avoidance behavior.
+The same configuration is accepted by the custom-navigation overload,
+`.toastPresentations(for:configuration:)`, and all `.toast` binding modifiers.
+Maximum visible count changes rendering only; it does not discard hidden occurrences.
+
+| Placement | Top deck | Bottom deck |
+| --- | --- | --- |
+| `.automatic` (default) | Container's safe top edge; may overlap navigation chrome. | Active content's bottom edge, above tab bars and bottom toolbars. |
+| `.container` | Container's safe top edge. | Container's safe bottom edge; may overlap navigation chrome. |
+| `.content` | Below the active content's top chrome. | Above the active content's bottom chrome. |
+
+Automatic and content placement also use the active content's horizontal bounds,
+keeping decks out of sidebars. When no NavigationKit content bounds are available,
+both fall back to the attached container. The container is the hosting view or
+sheet, not the entire display. Every mode retains that host's safe area and
+inherits its native keyboard avoidance; none ignores the safe area. Insets add
+spacing inside the selected region, including room for the exposed rear cards.
+Changing the configuration repositions existing toasts without restarting them.

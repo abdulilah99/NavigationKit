@@ -14,6 +14,7 @@ struct ToastControlsSection: View {
 
     var body: some View {
         Section("Toast decks") {
+            NavigationLink("Binding-based toasts", value: Page.toastBindings)
             Button("Show a toast") {
                 number += 1
                 toasts.show(.message(number))

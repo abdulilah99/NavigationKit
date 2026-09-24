@@ -45,7 +45,7 @@ Add NavigationKit with Xcode's package dependency interface, or declare it in
 ```swift
 .package(
     url: "https://github.com/abdulilah99/NavigationKit.git",
-    from: "1.0.0"
+    from: "1.1.0"
 )
 ```
 
@@ -153,13 +153,19 @@ complete usage documentation:
 - [Toasts](Documentation/Guidebook/toasts.md)
 - [Migrating from 0.1.x](Documentation/Guidebook/migration-to-1.0.md)
 
-## Toasts (unreleased)
+## Toasts
 
-The current development branch also includes a typed toast engine. An app-owned
+NavigationKit 1.1 includes a typed toast engine. An app-owned
 `Toastable` enum supplies custom SwiftUI content, expiration, and placement.
 `ToastController<Toast>` maintains independent occurrences and collapsed top and
 bottom decks. Use `navigation.makeView(toasts:)` or the custom-navigation
 presentation modifier to carry those decks through native sheets and covers.
+For a screen-owned toast, use `.toast(isPresented:content:)` with a custom view
+or `.toast(isPresented:toast:)` with an enum value. Use `.toast(item:)` when the
+enum is stored in an optional binding. Both enum forms require `Toastable & Equatable`.
+By default, top toasts use the container's safe top and bottom toasts clear bottom
+navigation controls. `ToastStackConfiguration(placement:)` also supports
+`.container` and `.content` for apps that prefer either behavior on both edges.
 See the [toast guide](Documentation/Guidebook/toasts.md) for the complete API.
 
 ## Example application

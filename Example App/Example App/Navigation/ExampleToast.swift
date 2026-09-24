@@ -8,7 +8,7 @@
 import NavigationKit
 import SwiftUI
 
-enum ExampleToast: Toastable {
+enum ExampleToast: Toastable, Equatable {
     case error(title: LocalizedStringResource, message: LocalizedStringResource)
     case message(Int)
     case saved

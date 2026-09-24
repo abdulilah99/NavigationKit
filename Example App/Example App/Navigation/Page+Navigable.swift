@@ -20,6 +20,8 @@ extension Page: Navigable {
             "Filters"
         case .player(let id):
             "Player \(id)"
+        case .toastBindings:
+            "Binding toasts"
         }
     }
 
@@ -39,6 +41,8 @@ extension Page: Navigable {
             Image(systemName: "line.3.horizontal.decrease.circle")
         case .player:
             Image(systemName: "play.rectangle")
+        case .toastBindings:
+            Image(systemName: "bell.badge")
         }
     }
 
@@ -63,6 +67,8 @@ extension Page: Navigable {
             FiltersView()
         case .player(let id):
             PlayerView(id: id)
+        case .toastBindings:
+            ToastBindingDemoView()
         }
     }
 }
