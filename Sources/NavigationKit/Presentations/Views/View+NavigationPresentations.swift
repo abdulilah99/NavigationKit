@@ -16,7 +16,25 @@ public extension View {
         modifier(
             NavigationPresentationModifier(
                 navigation: navigation,
-                index: 0
+                index: 0,
+                makeOverlay: { _ in EmptyModifier() }
+            )
+        )
+    }
+
+    /// Presents the native modal stack and moves toast rendering to its frontmost surface.
+    func navigationPresentations<Destination: Navigable, Toast: Toastable>(
+        for navigation: NavigationController<Destination>,
+        toasts: ToastController<Toast>,
+        toastConfiguration: ToastStackConfiguration = .init()
+    ) -> some View {
+        modifier(
+            NavigationPresentationModifier(
+                navigation: navigation,
+                index: 0,
+                makeOverlay: { isVisible in
+                    ToastPresentationModifier(toasts: toasts, configuration: toastConfiguration, isEnabled: isVisible)
+                }
             )
         )
     }

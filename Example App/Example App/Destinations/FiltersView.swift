@@ -8,6 +8,8 @@ struct FiltersView: View {
 
     var body: some View {
         List {
+            ToastControlsSection()
+
             Section("Example filters") {
                 Toggle("Include read articles", isOn: $includesReadArticles)
                 Toggle("Newest first", isOn: $newestFirst)

@@ -8,6 +8,8 @@ struct PlayerView: View {
 
     var body: some View {
         List {
+            ToastControlsSection()
+
             Section("Full-screen destination") {
                 Label("Playing item \(id)", systemImage: "play.fill")
                 Text("Full-screen presentations remain normal navigable destinations and can present another layer.")

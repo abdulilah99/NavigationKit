@@ -33,5 +33,6 @@ struct CustomRootBar: View {
             }
             .padding()
         }
+        .accessibilityIdentifier("custom-root-bar")
     }
 }

@@ -6,6 +6,8 @@ struct HomeView: View {
 
     var body: some View {
         List {
+            ToastControlsSection()
+
             Section("Typed links") {
                 NavigationLink(value: Page.article(1))
                 NavigationLink(value: Page.library)

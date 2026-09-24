@@ -8,4 +8,5 @@ enum Page: Hashable {
     case article(Int)
     case filters
     case player(Int)
+    case toastBindings
 }

@@ -8,6 +8,8 @@ struct ArticleView: View {
 
     var body: some View {
         List {
+            ToastControlsSection()
+
             ArticleIdentitySection(id: id)
             ArticleBodySection()
             ArticleNavigationSection(id: id, navigation: navigation)
