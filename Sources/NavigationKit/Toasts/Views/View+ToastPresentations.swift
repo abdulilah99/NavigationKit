@@ -15,8 +15,6 @@ public extension View {
         for toasts: ToastController<Toast>,
         configuration: ToastStackConfiguration = .init()
     ) -> some View {
-        overlay {
-            ToastOverlay(toasts: toasts, configuration: configuration)
-        }
+        modifier(ToastPresentationModifier(toasts: toasts, configuration: configuration))
     }
 }

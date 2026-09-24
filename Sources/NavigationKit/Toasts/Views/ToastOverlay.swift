@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-struct ToastOverlay<Toast: Toastable>: View {
+struct ToastOverlay<Toast: Toastable, ToastContent: View>: View {
     let toasts: ToastController<Toast>
     let configuration: ToastStackConfiguration
+    @ViewBuilder var toastContent: (ToastPresentation<Toast>) -> ToastContent
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -19,11 +20,11 @@ struct ToastOverlay<Toast: Toastable>: View {
         let bottom = toasts.presentations.filter { $0.edge == .bottom }
 
         VStack(spacing: 12) {
-            ToastStackView(presentations: top, toasts: toasts, edge: .top, configuration: configuration)
+            ToastStackView(presentations: top, toasts: toasts, edge: .top, configuration: configuration, toastContent: toastContent)
                 .allowsHitTesting(!top.isEmpty)
             Spacer(minLength: 0)
                 .allowsHitTesting(false)
-            ToastStackView(presentations: bottom, toasts: toasts, edge: .bottom, configuration: configuration)
+            ToastStackView(presentations: bottom, toasts: toasts, edge: .bottom, configuration: configuration, toastContent: toastContent)
                 .allowsHitTesting(!bottom.isEmpty)
         }
         .padding(configuration.insets)

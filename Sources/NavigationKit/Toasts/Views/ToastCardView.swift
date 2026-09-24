@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-struct ToastCardView<Toast: Toastable>: View {
+struct ToastCardView<Toast: Toastable, ToastContent: View>: View {
     let presentation: ToastPresentation<Toast>
     let toasts: ToastController<Toast>
     let depth: Int
     let configuration: ToastStackConfiguration
+    let toastContent: ToastContent
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #if !os(tvOS)
@@ -24,7 +25,7 @@ struct ToastCardView<Toast: Toastable>: View {
     private var direction: CGFloat { presentation.edge == .top ? -1 : 1 }
 
     var body: some View {
-        presentation.toast.content
+        toastContent
             .environment(toasts)
             .environment(presentation)
             .frame(

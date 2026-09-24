@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-struct ToastStackView<Toast: Toastable>: View {
+struct ToastStackView<Toast: Toastable, ToastContent: View>: View {
     let presentations: [ToastPresentation<Toast>]
     let toasts: ToastController<Toast>
     let edge: VerticalEdge
     let configuration: ToastStackConfiguration
+    @ViewBuilder var toastContent: (ToastPresentation<Toast>) -> ToastContent
 
     var body: some View {
         let visible = Array(presentations.suffix(configuration.maximumVisibleToasts))
@@ -26,7 +27,8 @@ struct ToastStackView<Toast: Toastable>: View {
                     presentation: presentation,
                     toasts: toasts,
                     depth: visible.count - index - 1,
-                    configuration: configuration
+                    configuration: configuration,
+                    toastContent: toastContent(presentation)
                 )
                 .zIndex(Double(index))
             }

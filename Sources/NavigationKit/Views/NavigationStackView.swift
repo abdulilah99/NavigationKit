@@ -11,9 +11,9 @@ struct NavigationStackView<Destination: Navigable>: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            NavigationDestinationView(destination: destination)
+            NavigationDestinationView(destination: destination, isActive: path.isEmpty)
                 .navigationDestination(for: Destination.self) { destination in
-                    NavigationDestinationView(destination: destination)
+                    NavigationDestinationView(destination: destination, isActive: path.last == destination)
                 }
         }
     }

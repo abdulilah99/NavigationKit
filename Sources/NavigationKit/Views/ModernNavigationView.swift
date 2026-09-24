@@ -44,7 +44,12 @@ struct ModernNavigationView<Destination: Navigable>: View {
                 Tab(
                     value: root.destination,
                     role: root.role?.tabRole,
-                    content: { root.content }
+                    content: {
+                        root.content
+                            .transformPreference(NavigationContentBoundsKey.self) {
+                                if root.destination != selection { $0 = nil }
+                            }
+                    }
                 ) {
                     Label(
                         title: { Text(root.destination.titleKey) },

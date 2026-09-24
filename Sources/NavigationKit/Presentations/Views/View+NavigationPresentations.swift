@@ -17,7 +17,7 @@ public extension View {
             NavigationPresentationModifier(
                 navigation: navigation,
                 index: 0,
-                overlay: EmptyView()
+                makeOverlay: { _ in EmptyModifier() }
             )
         )
     }
@@ -32,7 +32,9 @@ public extension View {
             NavigationPresentationModifier(
                 navigation: navigation,
                 index: 0,
-                overlay: ToastOverlay(toasts: toasts, configuration: toastConfiguration)
+                makeOverlay: { isVisible in
+                    ToastPresentationModifier(toasts: toasts, configuration: toastConfiguration, isEnabled: isVisible)
+                }
             )
         )
     }

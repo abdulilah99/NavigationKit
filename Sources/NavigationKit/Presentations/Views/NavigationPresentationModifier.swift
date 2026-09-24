@@ -5,10 +5,10 @@
 
 import SwiftUI
 
-struct NavigationPresentationModifier<Destination: Navigable, Overlay: View>: ViewModifier {
+struct NavigationPresentationModifier<Destination: Navigable, Overlay: ViewModifier>: ViewModifier {
     let navigation: NavigationController<Destination>
     let index: Int
-    let overlay: Overlay
+    let makeOverlay: (Bool) -> Overlay
     var isEnabled = true
 
     @State private var visibleChildID: NavigationPresentation<Destination>.ID?
@@ -55,13 +55,13 @@ struct NavigationPresentationModifier<Destination: Navigable, Overlay: View>: Vi
         #if os(macOS) || os(visionOS)
         // These platforms map both semantic styles to their native sheet.
         content
-            .overlay { activeOverlay }
+            .modifier(makeOverlay(visibleChildID == nil))
             .sheet(item: presentationBinding(matching: nil)) { presentation in
                 presentationView(presentation)
             }
         #else
         content
-            .overlay { activeOverlay }
+            .modifier(makeOverlay(visibleChildID == nil))
             .sheet(item: presentationBinding(matching: .sheet)) { presentation in
                 presentationView(presentation)
             }
@@ -73,19 +73,12 @@ struct NavigationPresentationModifier<Destination: Navigable, Overlay: View>: Vi
         #endif
     }
 
-    @ViewBuilder
-    private var activeOverlay: some View {
-        if visibleChildID == nil {
-            overlay
-        }
-    }
-
     private func presentationView(_ presentation: NavigationPresentation<Destination>) -> some View {
         NavigationPresentationView(
             navigation: navigation,
             presentation: presentation,
             index: index,
-            overlay: overlay
+            makeOverlay: makeOverlay
         )
         .onAppear {
             visibleChildID = presentation.id

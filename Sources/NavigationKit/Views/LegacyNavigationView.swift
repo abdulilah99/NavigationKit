@@ -23,6 +23,9 @@ struct LegacyNavigationView<Destination: Navigable>: View {
         TabView(selection: $selection) {
             ForEach(roots) { root in
                 root.content
+                    .transformPreference(NavigationContentBoundsKey.self) {
+                        if root.destination != selection { $0 = nil }
+                    }
                     .tag(root.destination)
                     .tabItem {
                         Label(
