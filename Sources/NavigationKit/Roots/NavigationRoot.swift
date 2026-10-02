@@ -59,4 +59,13 @@ public final class NavigationRoot<Destination: Navigable>: Identifiable {
             path: $root.path
         )
     }
+
+    /// The root's stack with visibility derived from its controller.
+    ///
+    /// Use this when retaining multiple roots in a custom container. Only the
+    /// selected root's front destination is visible while no modal covers it.
+    /// The returned view observes controller changes independently of its caller.
+    public func content(for navigation: NavigationController<Destination>) -> some View {
+        NavigationRootView(root: self, navigation: navigation)
+    }
 }

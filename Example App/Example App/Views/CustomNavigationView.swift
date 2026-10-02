@@ -11,7 +11,7 @@ struct CustomNavigationView: View {
             if let selectedRoot = navigation.roots.first(
                 where: { $0.destination == navigation.selectedRoot }
             ) {
-                selectedRoot.content
+                selectedRoot.content(for: navigation)
             }
 
             Divider()

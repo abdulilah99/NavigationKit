@@ -5,7 +5,7 @@ navigation interface while using the same observable controller and commands.
 
 ## Render the selected root
 
-Each `NavigationRoot` exposes `content`, which includes its typed
+Each `NavigationRoot` exposes `content(for:)`, which includes its typed
 `NavigationStack` and applies the destination's shared modifier:
 
 ```swift
@@ -17,7 +17,7 @@ struct CustomNavigationView: View {
             if let root = navigation.roots.first(
                 where: { $0.destination == navigation.selectedRoot }
             ) {
-                root.content
+                root.content(for: navigation)
             }
 
             CustomRootBar(navigation: navigation)
@@ -30,6 +30,13 @@ struct CustomNavigationView: View {
 Apply `.navigationPresentations(for:)` exactly once around a custom navigation
 view so the controller's nested modal stack can be displayed. `makeView()`
 already applies this modifier and does not need it again.
+
+`content(for:)` observes the controller inside its returned view, so visibility
+stays current even when that view is constructed outside a view body. Use it
+when retaining roots in a `ZStack`: opacity and hit testing remain the container's
+responsibility, while screens can defer reads using
+`@Environment(\.isNavigationDestinationVisible)`. The original `content` property
+remains available for an independently hosted stack without controller selection.
 
 Toast hosting is an independent opt-in. Add `.navigationToasts(for: toasts)`
 after the presentation modifier to render decks on the root and its presented

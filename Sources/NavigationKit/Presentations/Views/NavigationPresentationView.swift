@@ -16,6 +16,7 @@ struct NavigationPresentationView<Destination: Navigable>: View {
 
     var body: some View {
         presentation.content
+            .environment(\.isNavigationDestinationVisible, navigation.presentations.last?.id == presentation.id)
             .modifier(
                 NavigationPresentationModifier(
                     navigation: navigation,

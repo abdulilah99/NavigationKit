@@ -11,7 +11,7 @@ Add the package through Xcode or `Package.swift`:
 ```swift
 .package(
     url: "https://github.com/abdulilah99/NavigationKit.git",
-    from: "1.1.1"
+    from: "1.1.2"
 )
 ```
 
@@ -112,8 +112,8 @@ Read the concrete controller type wherever navigation commands are needed:
 @Environment(NavigationController<Page>.self) private var navigation
 ```
 
-NavigationKit does not introduce a custom environment key or erase the
-destination type.
+The controller retains its concrete destination type. NavigationKit does not
+require a custom environment key for sharing it.
 
 ## Render native navigation
 

@@ -8,23 +8,16 @@
 import SwiftUI
 
 struct LegacyNavigationView<Destination: Navigable>: View {
-    @Binding private var selection: Destination
-    private let roots: [NavigationRoot<Destination>]
-
-    init(
-        roots: [NavigationRoot<Destination>],
-        selection: Binding<Destination>
-    ) {
-        self.roots = roots
-        self._selection = selection
-    }
+    let navigation: NavigationController<Destination>
 
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(roots) { root in
-                root.content
+        @Bindable var navigation = navigation
+
+        TabView(selection: $navigation.selectedRoot) {
+            ForEach(navigation.roots) { root in
+                root.content(for: navigation)
                     .transformPreference(NavigationContentBoundsKey.self) {
-                        if root.destination != selection { $0 = nil }
+                        if root.destination != navigation.selectedRoot { $0 = nil }
                     }
                     .tag(root.destination)
                     .tabItem {

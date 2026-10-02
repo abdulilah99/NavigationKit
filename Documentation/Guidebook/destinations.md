@@ -90,8 +90,29 @@ The modifier is also an appropriate place for destination-wide toolbars,
 environment dependencies, accessibility metadata, and lifecycle behavior.
 
 Custom navigation views receive the same behavior when they render
-`NavigationRoot.content`. Presentation destinations receive it when the custom
+`NavigationRoot.content(for:)`. Presentation destinations receive it when the custom
 view installs `.navigationPresentations(for:)`.
+
+## Destination visibility
+
+Screens and destination modifiers can read NavigationKit's derived visibility:
+
+```swift
+@Environment(\.isNavigationDestinationVisible) private var isVisible
+```
+
+The value is true for the selected root's front destination when there are no
+modals, or for the front destination of the last modal occurrence. Covered paths,
+inactive retained roots, and covered modal occurrences receive false. Equal
+destinations in different roots or modal occurrences remain independent. Within
+a typed path, visibility follows destination equality; repeated equal route
+values do not have independent visibility identities.
+
+Native navigation installs this automatically. Custom containers use
+`root.content(for: navigation)` and `.navigationPresentations(for: navigation)`.
+Visibility follows controller state; it does not track scene activity, transition
+completion, or sheets presented outside NavigationKit. Screens still own their
+tasks and cancellation. Standalone destination content defaults to visible.
 
 ## Typed navigation links
 

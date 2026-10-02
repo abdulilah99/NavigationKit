@@ -13,16 +13,7 @@ struct ModernNavigationView<Destination: Navigable>: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
-    @Binding private var selection: Destination
-    private let roots: [NavigationRoot<Destination>]
-
-    init(
-        roots: [NavigationRoot<Destination>],
-        selection: Binding<Destination>
-    ) {
-        self.roots = roots
-        self._selection = selection
-    }
+    let navigation: NavigationController<Destination>
 
     private var surfaceContext: NavigationSurfaceContext {
         #if os(tvOS)
@@ -37,17 +28,19 @@ struct ModernNavigationView<Destination: Navigable>: View {
     }
 
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(roots) { root in
+        @Bindable var navigation = navigation
+
+        TabView(selection: $navigation.selectedRoot) {
+            ForEach(navigation.roots) { root in
                 let surfaces = root.surfaces(in: surfaceContext)
 
                 Tab(
                     value: root.destination,
                     role: root.role?.tabRole,
                     content: {
-                        root.content
+                        root.content(for: navigation)
                             .transformPreference(NavigationContentBoundsKey.self) {
-                                if root.destination != selection { $0 = nil }
+                                if root.destination != navigation.selectedRoot { $0 = nil }
                             }
                     }
                 ) {

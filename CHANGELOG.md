@@ -2,6 +2,17 @@
 
 All notable changes to NavigationKit are documented here.
 
+## 1.1.2 — 2026-10-02
+
+### Added
+
+- `isNavigationDestinationVisible` environment value for screens and destination
+  modifiers. Native navigation and modal hosts derive it from stack state and
+  modal occurrence identity, without additional stored state.
+- `NavigationRoot.content(for:)` supplies the same visibility to custom containers,
+  including those that keep inactive roots mounted. Its returned view observes
+  controller changes even when constructed outside a view body.
+
 ## 1.1.1 — 2026-09-24
 
 ### Fixed
