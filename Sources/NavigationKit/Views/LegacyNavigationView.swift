@@ -23,7 +23,11 @@ struct LegacyNavigationView<Destination: Navigable>: View {
                     .tabItem {
                         Label(
                             title: { Text(root.destination.titleKey) },
-                            icon: { root.destination.icon }
+                            icon: {
+                                root.destination == navigation.selectedRoot
+                                    ? root.destination.selectedIcon
+                                    : root.destination.icon
+                            }
                         )
                     }
             }

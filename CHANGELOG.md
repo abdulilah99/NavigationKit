@@ -2,6 +2,15 @@
 
 All notable changes to NavigationKit are documented here.
 
+## 1.1.3 — 2026-10-31
+
+### Added
+
+- `Navigable.selectedIcon` customizes the selected root's native tab or sidebar
+  icon, including custom image assets. Its default implementation returns `icon`,
+  preserving existing conformers. Both modern and legacy navigation hosts derive
+  the choice from the controller's selected root, independently of focus.
+
 ## 1.1.2 — 2026-10-02
 
 ### Added

@@ -25,6 +25,12 @@ public protocol Navigable: Identifiable, Hashable {
     /// The image used for the destination's standard icon.
     var icon: Image { get }
 
+    /// The image used when this destination is the selected root.
+    ///
+    /// Defaults to `icon`. Native tab and sidebar labels use root selection,
+    /// independently of keyboard or remote focus.
+    var selectedIcon: Image { get }
+
     /// The view displayed when navigating to this destination.
     @ViewBuilder var content: Content { get }
 
@@ -35,6 +41,11 @@ public protocol Navigable: Identifiable, Hashable {
     /// provide behavior such as navigation titles, environment dependencies,
     /// toolbars, or lifecycle handling from one place.
     @MainActor var modifier: Modifier { get }
+}
+
+public extension Navigable {
+    /// Existing destinations keep the same icon when selected.
+    var selectedIcon: Image { icon }
 }
 
 public extension Navigable where Modifier == EmptyModifier {

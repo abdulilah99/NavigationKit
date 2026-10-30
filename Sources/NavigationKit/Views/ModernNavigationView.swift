@@ -46,7 +46,11 @@ struct ModernNavigationView<Destination: Navigable>: View {
                 ) {
                     Label(
                         title: { Text(root.destination.titleKey) },
-                        icon: { root.destination.icon }
+                        icon: {
+                            root.destination == navigation.selectedRoot
+                                ? root.destination.selectedIcon
+                                : root.destination.icon
+                        }
                     )
                 }
                 .tabPlacement(surfaces.contains(.tabBar) ? .automatic : .sidebarOnly)

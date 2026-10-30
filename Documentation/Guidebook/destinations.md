@@ -43,6 +43,29 @@ var icon: Image {
 the value through the app's localization resources. These values form the
 standard label for native roots and NavigationKit's link convenience.
 
+## Selected root icon
+
+Implement `selectedIcon` when a root uses different artwork while selected:
+
+```swift
+var selectedIcon: Image {
+    switch self {
+    case .home: Image("home-filled")
+    case .library: Image("library-filled")
+    default: icon
+    }
+}
+```
+
+Its default implementation returns `icon`, so existing destinations need no
+changes. `makeView()` chooses between `icon` and `selectedIcon` using the
+controller's selected root in both modern and legacy native navigation. Moving
+keyboard or remote focus alone does not change the choice. Ordinary navigation
+links continue to use `icon`.
+
+Custom navigation views can use the same properties with their controller's
+selection; no additional selection state is needed.
+
 ## Destination content
 
 The `content` property builds the view associated with the value:
