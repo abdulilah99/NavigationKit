@@ -58,10 +58,17 @@ var selectedIcon: Image {
 ```
 
 Its default implementation returns `icon`, so existing destinations need no
-changes. `makeView()` chooses between `icon` and `selectedIcon` using the
-controller's selected root in both modern and legacy native navigation. Moving
-keyboard or remote focus alone does not change the choice. Ordinary navigation
-links continue to use `icon`.
+changes. On iOS 26.1 and later, `makeView()` supplies both images to the native
+tab, including tabs whose content has not appeared. The system can display the
+selected artwork beneath the Liquid Glass selector during interaction, before
+that tab becomes the controller's selected root. Selected artwork is rendered at
+the native image's size when SwiftUI updates the bridge; UIKit retains it for
+interaction. Destinations using the default keep native symbol behavior.
+
+On earlier iOS versions and other platforms, the modern and legacy hosts choose
+between the images using the controller's selected root. Moving keyboard or
+remote focus alone does not change that choice. Ordinary navigation links
+continue to use `icon`.
 
 Custom navigation views can use the same properties with their controller's
 selection; no additional selection state is needed.

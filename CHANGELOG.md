@@ -2,6 +2,15 @@
 
 All notable changes to NavigationKit are documented here.
 
+## 1.1.4 — 2026-10-31
+
+### Fixed
+
+- Native iOS tabs receive `icon` and `selectedIcon` together on iOS 26.1 and later,
+  allowing custom selected artwork to appear beneath the Liquid Glass selector
+  during interaction. Unvisited tabs have their selected artwork available too.
+  Earlier systems and other platforms retain selection-driven labels.
+
 ## 1.1.3 — 2026-10-31
 
 ### Added

@@ -27,8 +27,9 @@ public protocol Navigable: Identifiable, Hashable {
 
     /// The image used when this destination is the selected root.
     ///
-    /// Defaults to `icon`. Native tab and sidebar labels use root selection,
-    /// independently of keyboard or remote focus.
+    /// Defaults to `icon`. On iOS 26.1 and later, native tabs receive both
+    /// images so the system can preview this artwork during interaction.
+    /// Other native hosts use root selection, independently of keyboard or remote focus.
     var selectedIcon: Image { get }
 
     /// The view displayed when navigating to this destination.

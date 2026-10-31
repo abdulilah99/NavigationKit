@@ -39,6 +39,21 @@ struct ModernNavigationView<Destination: Navigable>: View {
                     role: root.role?.tabRole,
                     content: {
                         root.content(for: navigation)
+                            #if os(iOS)
+                            .background {
+                                if #available(iOS 26.1, *) {
+                                    NativeTabImages(
+                                        pairs: navigation.roots.map {
+                                            .init(
+                                                icon: $0.destination.icon,
+                                                selectedIcon: $0.destination.selectedIcon
+                                            )
+                                        },
+                                        isActive: root.destination == navigation.selectedRoot
+                                    )
+                                }
+                            }
+                            #endif
                             .transformPreference(NavigationContentBoundsKey.self) {
                                 if root.destination != navigation.selectedRoot { $0 = nil }
                             }
@@ -47,9 +62,7 @@ struct ModernNavigationView<Destination: Navigable>: View {
                     Label(
                         title: { Text(root.destination.titleKey) },
                         icon: {
-                            root.destination == navigation.selectedRoot
-                                ? root.destination.selectedIcon
-                                : root.destination.icon
+                            tabIcon(for: root.destination)
                         }
                     )
                 }
@@ -68,6 +81,15 @@ struct ModernNavigationView<Destination: Navigable>: View {
                 #endif
             }
         }
+    }
+
+    private func tabIcon(for destination: Destination) -> Image {
+        #if os(iOS)
+        if #available(iOS 26.1, *) {
+            return destination.icon
+        }
+        #endif
+        return destination == navigation.selectedRoot ? destination.selectedIcon : destination.icon
     }
 }
 
